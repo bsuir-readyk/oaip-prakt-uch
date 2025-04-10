@@ -16,3 +16,6 @@ bnr:
 	@echo "\n\n---===---\nbuild done \ntrying to run:\n---===---\n\n"
 	@make run
 
+clean:
+	rm -rvI ./**/*.ppu
+	rm -rvI ./**/*.o

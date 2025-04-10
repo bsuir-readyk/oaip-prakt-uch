@@ -3,7 +3,7 @@ unit Components;
 interface
 
 uses
-  SysUtils, Types;
+  SysUtils, Types, UI;
 
 // Инициализация списка комплектующих
 procedure InitComponentsList;
@@ -393,37 +393,79 @@ end;
 procedure PrintComponents(List: PComponentNode);
 var
   Current: PComponentNode;
+  ColumnWidths: array[0..6] of Integer;
+  Alignments: array[0..6] of Char;
+  Values: array[0..6] of string;
+  ComponentCount: Integer;
 begin
   Current := List;
   
   WriteLn('Список комплектующих:');
-  WriteLn('--------------------');
   
   if Current = nil then
     WriteLn('Список пуст')
   else
+  begin
+    // Определяем ширину столбцов
+    ColumnWidths[0] := 6;  // Код
+    ColumnWidths[1] := 6;  // Тип
+    ColumnWidths[2] := 15; // Производитель
+    ColumnWidths[3] := 15; // Модель
+    ColumnWidths[4] := 25; // Параметры
+    ColumnWidths[5] := 10; // Цена
+    ColumnWidths[6] := 8;  // Наличие
+    
+    // Определяем выравнивание столбцов
+    Alignments[0] := 'R'; // Код - по правому краю
+    Alignments[1] := 'R'; // Тип - по правому краю
+    Alignments[2] := 'L'; // Производитель - по левому краю
+    Alignments[3] := 'L'; // Модель - по левому краю
+    Alignments[4] := 'L'; // Параметры - по левому краю
+    Alignments[5] := 'R'; // Цена - по правому краю
+    Alignments[6] := 'R'; // Наличие - по центру
+    
+    // Выводим заголовок таблицы
+    PrintTableHorizontalLine(ColumnWidths, 'T');
+    
+    Values[0] := 'Code';
+    Values[1] := 'Type';
+    Values[2] := 'Manufacturer';
+    Values[3] := 'Model';
+    Values[4] := 'Parameters';
+    Values[5] := 'Price';
+    Values[6] := 'Stock';
+    PrintTableRow(Values, ColumnWidths, Alignments);
+    
+    PrintTableHorizontalLine(ColumnWidths, 'M');
+    
+    // Выводим данные
+    ComponentCount := 0;
     while Current <> nil do
     begin
       with Current^.Data do
       begin
-        WriteLn('Код: ', Code);
-        WriteLn('Тип: ', TypeCode);
-        WriteLn('Производитель: ', Manufacturer);
-        WriteLn('Модель: ', Model);
-        WriteLn('Параметры: ', Parameters);
-        WriteLn('Цена: ', Price:0:2);
-        Write('Наличие: ');
+        Values[0] := IntToStr(Code);
+        Values[1] := IntToStr(TypeCode);
+        Values[2] := Manufacturer;
+        Values[3] := Model;
+        Values[4] := Parameters;
+        Values[5] := Format('%.2f', [Price]);
         
         if InStock then
-          WriteLn('Да')
+          Values[6] := 'Yes'
         else
-          WriteLn('Нет');
+          Values[6] := 'No';
         
-        WriteLn('--------------------');
+        PrintTableRow(Values, ColumnWidths, Alignments);
       end;
       
       Current := Current^.Next;
+      Inc(ComponentCount);
     end;
+    
+    PrintTableHorizontalLine(ColumnWidths, 'B');
+    WriteLn('Всего комплектующих: ', ComponentCount);
+  end;
 end;
 
 end.

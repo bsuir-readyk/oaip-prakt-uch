@@ -3,7 +3,7 @@ unit ComponentTypes;
 interface
 
 uses
-  SysUtils, Types;
+  SysUtils, Types, UI;
 
 // Инициализация списка типов комплектующих
 procedure InitComponentTypesList;
@@ -175,26 +175,59 @@ end;
 procedure PrintComponentTypes(List: PComponentTypeNode);
 var
   Current: PComponentTypeNode;
+  ColumnWidths: array[0..2] of Integer;
+  Alignments: array[0..2] of Char;
+  Values: array[0..2] of string;
+  TypeCount: Integer;
 begin
   Current := List;
   
   WriteLn('Список типов комплектующих:');
-  WriteLn('---------------------------');
   
   if Current = nil then
     WriteLn('Список пуст')
   else
+  begin
+    // Определяем ширину столбцов
+    ColumnWidths[0] := 5;  // Код
+    ColumnWidths[1] := 5;  // Код
+    ColumnWidths[2] := 30; // Название
+    
+    // Определяем выравнивание столбцов
+    Alignments[0] := 'R'; // Код - по правому краю
+    Alignments[1] := 'C'; // Код - по правому краю
+    Alignments[2] := 'L'; // Название - по левому краю
+    
+    // Выводим заголовок таблицы
+    PrintTableHorizontalLine(ColumnWidths, 'T');
+    
+    Values[0] := 'Code';
+    Values[1] := 'Code';
+    Values[2] := 'Name';
+    PrintTableRow(Values, ColumnWidths, Alignments);
+    
+    PrintTableHorizontalLine(ColumnWidths, 'M');
+    
+    // Выводим данные
+    TypeCount := 0;
     while Current <> nil do
     begin
       with Current^.Data do
       begin
-        WriteLn('Код: ', Code);
-        WriteLn('Название: ', Name);
-        WriteLn('---------------------------');
+        Values[0] := IntToStr(Code);
+        Values[1] := IntToStr(Code);
+        Values[2] := Name;
+        
+        PrintTableRow(Values, ColumnWidths, Alignments);
       end;
       
       Current := Current^.Next;
+      Inc(TypeCount);
     end;
+    
+    PrintTableHorizontalLine(ColumnWidths, 'B');
+    WriteLn('Всего типов комплектующих: ', TypeCount);
+  end;
 end;
 
 end.

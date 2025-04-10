@@ -3,7 +3,7 @@ unit SpecialFunctions;
 interface
 
 uses
-  SysUtils, Types, Components, ComponentTypes, Compatibility, FileIO, Orders;
+  SysUtils, Types, Components, ComponentTypes, Compatibility, FileIO, Orders, UI;
 
 // Подбор вариантов комплектации компьютера в заданном ценовом диапазоне
 function FindComputerConfigurations(MinPrice, MaxPrice: Real; SelectedTypes: array of Integer): PConfigurationNode;
@@ -17,7 +17,95 @@ function FindCompatibleComponentsOfType(ComponentCode, TypeCode: Integer): PComp
 // Обновление наличия комплектующей
 procedure UpdateComponentStock(ComponentCode: Integer; InStock: Boolean);
 
+// Вывод списка конфигураций в виде таблицы
+procedure PrintConfigurations(Configurations: PConfigurationNode);
+
 implementation
+
+// Вывод списка конфигураций в виде таблицы
+procedure PrintConfigurations(Configurations: PConfigurationNode);
+var
+  Current: PConfigurationNode;
+  ColumnWidths: array[0..3] of Integer;
+  Alignments: array[0..3] of Char;
+  Values: array[0..3] of string;
+  i, j, ConfigCount: Integer;
+  ComponentTypeNode: PComponentTypeNode;
+begin
+  Current := Configurations;
+  
+  WriteLn('Результаты подбора конфигураций:');
+  
+  if Current = nil then
+    WriteLn('Не найдено подходящих конфигураций.')
+  else
+  begin
+    // Определяем ширину столбцов
+    ColumnWidths[0] := 5;  // Номер конфигурации
+    ColumnWidths[1] := 15; // Общая стоимость
+    ColumnWidths[2] := 20; // Тип комплектующей
+    ColumnWidths[3] := 30; // Комплектующая
+    
+    // Определяем выравнивание столбцов
+    Alignments[0] := 'C'; // Номер конфигурации - по правому краю
+    Alignments[1] := 'C'; // Общая стоимость - по правому краю
+    Alignments[2] := 'C'; // Тип комплектующей - по левому краю
+    Alignments[3] := 'C'; // Комплектующая - по левому краю
+    
+    // Выводим заголовок таблицы
+    PrintTableHorizontalLine(ColumnWidths, 'T');
+    
+    Values[0] := 'Number';
+    Values[1] := 'Price';
+    Values[2] := 'Type';
+    Values[3] := 'Component';
+    PrintTableRow(Values, ColumnWidths, Alignments);
+    
+    PrintTableHorizontalLine(ColumnWidths, 'M');
+    
+    // Выводим данные
+    ConfigCount := 0;
+    i := 1;
+    
+    while Current <> nil do
+    begin
+      // Выводим информацию о конфигурации
+      Values[0] := IntToStr(i);
+      Values[1] := Format('%.2f', [Current^.Data.TotalPrice]);
+      Values[2] := '';
+      Values[3] := '';
+      PrintTableRow(Values, ColumnWidths, Alignments);
+      
+      // Выводим комплектующие
+      for j := 0 to Current^.Data.ComponentCount - 1 do
+      begin
+        componentTypeNode := FindComponentTypeByCode(Current^.Data.Components[j].TypeCode);
+        
+        if componentTypeNode <> nil then
+          Values[2] := componentTypeNode^.Data.Name
+        else
+          Values[2] := 'Type ' + IntToStr(Current^.Data.Components[j].TypeCode);
+        
+        Values[0] := '';
+        Values[1] := '';
+        Values[3] := Current^.Data.Components[j].Manufacturer + ' ' +
+                     Current^.Data.Components[j].Model + ' - ' +
+                     Format('%.2f', [Current^.Data.Components[j].Price]);
+        
+        PrintTableRow(Values, ColumnWidths, Alignments);
+      end;
+      
+      PrintTableHorizontalLine(ColumnWidths, 'M');
+      
+      Current := Current^.Next;
+      Inc(ConfigCount);
+      Inc(i);
+    end;
+    
+    PrintTableHorizontalLine(ColumnWidths, 'B');
+    WriteLn('Total configurations: ', ConfigCount);
+  end;
+end;
 
 // Проверка совместимости всех компонентов в конфигурации
 function AreAllComponentsCompatible(Components: array of TComponent; Count: Integer): Boolean;

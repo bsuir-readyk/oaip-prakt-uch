@@ -3,7 +3,7 @@ unit Compatibility;
 interface
 
 uses
-  SysUtils, Types, Components;
+  SysUtils, Types, Components, UI;
 
 // Инициализация списка совместимости
 procedure InitCompatibilityList;
@@ -268,15 +268,44 @@ procedure PrintCompatibility(List: PCompatibilityNode);
 var
   Current: PCompatibilityNode;
   Component1, Component2: PComponentNode;
+  ColumnWidths: array[0..3] of Integer;
+  Alignments: array[0..3] of Char;
+  Values: array[0..3] of string;
+  CompatibilityCount: Integer;
 begin
   Current := List;
   
   WriteLn('Список совместимости комплектующих:');
-  WriteLn('-----------------------------------');
   
   if Current = nil then
     WriteLn('Список пуст')
   else
+  begin
+    // Определяем ширину столбцов
+    ColumnWidths[0] := 5;  // Код 1
+    ColumnWidths[1] := 25; // Комплектующая 1
+    ColumnWidths[2] := 5;  // Код 2
+    ColumnWidths[3] := 25; // Комплектующая 2
+    
+    // Определяем выравнивание столбцов
+    Alignments[0] := 'R'; // Код 1 - по правому краю
+    Alignments[1] := 'L'; // Комплектующая 1 - по левому краю
+    Alignments[2] := 'R'; // Код 2 - по правому краю
+    Alignments[3] := 'L'; // Комплектующая 2 - по левому краю
+    
+    // Выводим заголовок таблицы
+    PrintTableHorizontalLine(ColumnWidths, 'T');
+    
+    Values[0] := 'Code';
+    Values[1] := 'Component 1';
+    Values[2] := 'Code';
+    Values[3] := 'Component 2';
+    PrintTableRow(Values, ColumnWidths, Alignments);
+    
+    PrintTableHorizontalLine(ColumnWidths, 'M');
+    
+    // Выводим данные
+    CompatibilityCount := 0;
     while Current <> nil do
     begin
       Component1 := FindComponentByCode(Current^.Data.ComponentCode1);
@@ -284,13 +313,21 @@ begin
       
       if (Component1 <> nil) and (Component2 <> nil) then
       begin
-        WriteLn('Комплектующая: ', Component1^.Data.Manufacturer, ' ', Component1^.Data.Model);
-        WriteLn('Совместима с: ', Component2^.Data.Manufacturer, ' ', Component2^.Data.Model);
-        WriteLn('-----------------------------------');
+        Values[0] := IntToStr(Current^.Data.ComponentCode1);
+        Values[1] := Component1^.Data.Manufacturer + ' ' + Component1^.Data.Model;
+        Values[2] := IntToStr(Current^.Data.ComponentCode2);
+        Values[3] := Component2^.Data.Manufacturer + ' ' + Component2^.Data.Model;
+        
+        PrintTableRow(Values, ColumnWidths, Alignments);
+        Inc(CompatibilityCount);
       end;
       
       Current := Current^.Next;
     end;
+    
+    PrintTableHorizontalLine(ColumnWidths, 'B');
+    WriteLn('Всего записей о совместимости: ', CompatibilityCount);
+  end;
 end;
 
 end.

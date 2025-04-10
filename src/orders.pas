@@ -3,7 +3,7 @@ unit Orders;
 interface
 
 uses
-  SysUtils, Types;
+  SysUtils, Types, UI;
 
 // Инициализация списка заказов
 procedure InitOrdersList;
@@ -160,34 +160,80 @@ procedure PrintOrders(List: POrderNode);
 var
   Current: POrderNode;
   i: Integer;
+  ColumnWidths: array[0..4] of Integer;
+  Alignments: array[0..4] of Char;
+  Values: array[0..4] of string;
+  OrderCount: Integer;
+  ComponentsStr: string;
 begin
   Current := List;
   
   WriteLn('Список заказов:');
-  WriteLn('---------------');
   
   if Current = nil then
     WriteLn('Список пуст')
   else
+  begin
+    // Определяем ширину столбцов
+    ColumnWidths[0] := 5;  // Номер заказа
+    ColumnWidths[1] := 12; // Дата
+    ColumnWidths[2] := 20; // Заказчик
+    ColumnWidths[3] := 15; // Телефон
+    ColumnWidths[4] := 15; // Общая стоимость
+    
+    // Определяем выравнивание столбцов
+    Alignments[0] := 'R'; // Номер заказа - по правому краю
+    Alignments[1] := 'C'; // Дата - по центру
+    Alignments[2] := 'L'; // Заказчик - по левому краю
+    Alignments[3] := 'L'; // Телефон - по левому краю
+    Alignments[4] := 'R'; // Общая стоимость - по правому краю
+    
+    // Выводим заголовок таблицы
+    PrintTableHorizontalLine(ColumnWidths, 'T');
+    
+    Values[0] := 'Number';
+    Values[1] := 'Date';
+    Values[2] := 'Customer';
+    Values[3] := 'Phone';
+    Values[4] := 'Price';
+    PrintTableRow(Values, ColumnWidths, Alignments);
+    
+    PrintTableHorizontalLine(ColumnWidths, 'M');
+    
+    // Выводим данные
+    OrderCount := 0;
     while Current <> nil do
     begin
       with Current^.Data do
       begin
-        WriteLn('Номер заказа: ', OrderNumber);
-        WriteLn('Дата: ', DateToStr(Date));
-        WriteLn('Заказчик: ', CustomerName);
-        WriteLn('Телефон: ', CustomerPhone);
-        WriteLn('Общая стоимость: ', TotalPrice:0:2);
-        WriteLn('Комплектующие:');
+        Values[0] := IntToStr(OrderNumber);
+        Values[1] := DateToStr(Date);
+        Values[2] := CustomerName;
+        Values[3] := CustomerPhone;
+        Values[4] := Format('%.2f', [TotalPrice]);
         
+        PrintTableRow(Values, ColumnWidths, Alignments);
+        
+        // Выводим список комплектующих
+        ComponentsStr := 'Components: ';
         for i := 0 to ComponentCount - 1 do
-          WriteLn('  - Код: ', Components[i]);
+        begin
+          if i > 0 then
+            ComponentsStr := ComponentsStr + ', ';
+          ComponentsStr := ComponentsStr + IntToStr(Components[i]);
+        end;
         
-        WriteLn('---------------');
+        WriteLn('│ ', PadString(ComponentsStr, ColumnWidths[0] + ColumnWidths[1] + ColumnWidths[2] + ColumnWidths[3] + ColumnWidths[4] + 8, 'L'), ' │');
+        PrintTableHorizontalLine(ColumnWidths, 'M');
       end;
       
       Current := Current^.Next;
+      Inc(OrderCount);
     end;
+    
+    PrintTableHorizontalLine(ColumnWidths, 'B');
+    WriteLn('Всего заказов: ', OrderCount);
+  end;
 end;
 
 end.

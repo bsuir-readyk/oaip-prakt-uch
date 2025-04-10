@@ -447,46 +447,15 @@ begin
               DataLists.Configurations := FindComputerConfigurations(minPrice, maxPrice, selectedTypes);
               
               // Выводим результаты
+              ClrScr;
+              PrintHeader('РЕЗУЛЬТАТЫ ПОДБОРА КОНФИГУРАЦИЙ');
+              
+              // Выводим конфигурации в виде таблицы
+              PrintConfigurations(DataLists.Configurations);
+              
+              // Записываем результаты в файл
               if DataLists.Configurations <> nil then
-              begin
-                ClrScr;
-                PrintHeader('РЕЗУЛЬТАТЫ ПОДБОРА КОНФИГУРАЦИЙ');
-                
-                // Выводим конфигурации
-                Current := DataLists.Configurations;
-                i := 1;
-                
-                while Current <> nil do
-                begin
-                  WriteLn('Конфигурация #', i);
-                  WriteLn('--------------------');
-                  WriteLn('Общая стоимость: ', Current^.Data.TotalPrice:0:2);
-                  WriteLn;
-                  WriteLn('Комплектующие:');
-                  
-                  for j := 0 to Current^.Data.ComponentCount - 1 do
-                  begin
-                    componentTypeNode := FindComponentTypeByCode(Current^.Data.Components[j].TypeCode);
-                    
-                    if componentTypeNode <> nil then
-                      WriteLn(componentTypeNode^.Data.Name, ': ', Current^.Data.Components[j].Manufacturer, ' ', Current^.Data.Components[j].Model, ' - ', Current^.Data.Components[j].Price:0:2)
-                    else
-                      WriteLn('Тип ', Current^.Data.Components[j].TypeCode, ': ', Current^.Data.Components[j].Manufacturer, ' ', Current^.Data.Components[j].Model, ' - ', Current^.Data.Components[j].Price:0:2);
-                  end;
-                  
-                  WriteLn;
-                  WriteLn('--------------------');
-                  WriteLn;
-                  
-                  Current := Current^.Next;
-                  Inc(i);
-                end;
-                
-                // Записываем результаты в файл
                 WriteConfigurationsToTextFile(DataLists.Configurations);
-              end
-              else
-                WriteLn('Не найдено подходящих конфигураций.');
             end;
             
             2: begin // Оформление заказа
@@ -495,22 +464,19 @@ begin
               
               if DataLists.Configurations <> nil then
               begin
-                // Выводим конфигурации
-                Current := DataLists.Configurations;
-                i := 1;
+                // Выводим конфигурации в виде таблицы
+                PrintConfigurations(DataLists.Configurations);
                 
+                // Инициализируем переменную для подсчета количества конфигураций
+                Current := DataLists.Configurations;
+                i := 0;
                 while Current <> nil do
                 begin
-                  WriteLn('Конфигурация #', i);
-                  WriteLn('--------------------');
-                  WriteLn('Общая стоимость: ', Current^.Data.TotalPrice:0:2);
-                  WriteLn;
-                  
-                  Current := Current^.Next;
                   Inc(i);
+                  Current := Current^.Next;
                 end;
                 
-                searchCode := SafeReadInteger('Введите номер конфигурации для заказа: ', 1, i - 1);
+                searchCode := SafeReadInteger('Введите номер конфигурации для заказа: ', 1, i);
                 
                 // Запрашиваем данные заказчика
                 customerName := SafeReadString('Введите имя заказчика: ');
@@ -571,6 +537,7 @@ begin
               else
                 WriteLn('Не найдено совместимых комплектующих заданного типа.');
             end;
+            
           end;
           
           WaitForKey;
