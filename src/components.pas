@@ -5,6 +5,11 @@ interface
 uses
   SysUtils, Types, UI;
 
+// Тип функции-компаратора для сравнения двух компонентов
+// Возвращает True, если первый компонент должен идти перед вторым
+type
+  TComponentComparator = function(const Component1, Component2: TComponent): Boolean;
+
 // Инициализация списка комплектующих
 procedure InitComponentsList;
 
@@ -31,6 +36,14 @@ function FindComponentsByManufacturer(const Manufacturer: string): PComponentNod
 
 // Поиск комплектующих в ценовом диапазоне
 function FindComponentsByPriceRange(MinPrice, MaxPrice: Real): PComponentNode;
+
+// Обобщенная функция сортировки связного списка с использованием компаратора
+procedure SortLinkedList(var List: PComponentNode; Comparator: TComponentComparator);
+
+// Компараторы для различных видов сортировки
+function PriceComparator(const Component1, Component2: TComponent): Boolean;
+function StockComparator(const Component1, Component2: TComponent): Boolean;
+function ManufacturerComparator(const Component1, Component2: TComponent): Boolean;
 
 // Сортировка комплектующих по цене
 procedure SortComponentsByPrice(var List: PComponentNode);
@@ -255,8 +268,8 @@ begin
   FindComponentsByPriceRange := ResultList;
 end;
 
-// Сортировка комплектующих по цене
-procedure SortComponentsByPrice(var List: PComponentNode);
+// Обобщенная функция сортировки связного списка с использованием компаратора
+procedure SortLinkedList(var List: PComponentNode; Comparator: TComponentComparator);
 var
   Sorted, Current, Temp: PComponentNode;
   needsSorting: Boolean;
@@ -272,7 +285,7 @@ begin
       Current := List;
       List := List^.Next;
       
-      if (Sorted = nil) or (Current^.Data.Price < Sorted^.Data.Price) then
+      if (Sorted = nil) or Comparator(Current^.Data, Sorted^.Data) then
       begin
         Current^.Next := Sorted;
         Sorted := Current;
@@ -281,7 +294,7 @@ begin
       begin
         Temp := Sorted;
         
-        while (Temp^.Next <> nil) and (Current^.Data.Price >= Temp^.Next^.Data.Price) do
+        while (Temp^.Next <> nil) and not Comparator(Current^.Data, Temp^.Next^.Data) do
           Temp := Temp^.Next;
         
         Current^.Next := Temp^.Next;
@@ -291,82 +304,42 @@ begin
     
     List := Sorted;
   end;
+end;
+
+// Компаратор для сортировки по цене (по возрастанию)
+function PriceComparator(const Component1, Component2: TComponent): Boolean;
+begin
+  PriceComparator := Component1.Price < Component2.Price;
+end;
+
+// Компаратор для сортировки по наличию (сначала в наличии)
+function StockComparator(const Component1, Component2: TComponent): Boolean;
+begin
+  StockComparator := Component1.InStock and not Component2.InStock;
+end;
+
+// Компаратор для сортировки по производителю (по алфавиту)
+function ManufacturerComparator(const Component1, Component2: TComponent): Boolean;
+begin
+  ManufacturerComparator := Component1.Manufacturer < Component2.Manufacturer;
+end;
+
+// Сортировка комплектующих по цене
+procedure SortComponentsByPrice(var List: PComponentNode);
+begin
+  SortLinkedList(List, @PriceComparator);
 end;
 
 // Сортировка комплектующих по наличию
 procedure SortComponentsByStock(var List: PComponentNode);
-var
-  Sorted, Current, Temp: PComponentNode;
-  needsSorting: Boolean;
 begin
-  needsSorting := (List <> nil) and (List^.Next <> nil);
-  
-  if needsSorting then
-  begin
-    Sorted := nil;
-    
-    while List <> nil do
-    begin
-      Current := List;
-      List := List^.Next;
-      
-      if (Sorted = nil) or (Current^.Data.InStock and not Sorted^.Data.InStock) then
-      begin
-        Current^.Next := Sorted;
-        Sorted := Current;
-      end
-      else
-      begin
-        Temp := Sorted;
-        
-        while (Temp^.Next <> nil) and (not Current^.Data.InStock or Temp^.Next^.Data.InStock) do
-          Temp := Temp^.Next;
-        
-        Current^.Next := Temp^.Next;
-        Temp^.Next := Current;
-      end;
-    end;
-    
-    List := Sorted;
-  end;
+  SortLinkedList(List, @StockComparator);
 end;
 
 // Сортировка комплектующих по производителю
 procedure SortComponentsByManufacturer(var List: PComponentNode);
-var
-  Sorted, Current, Temp: PComponentNode;
-  needsSorting: Boolean;
 begin
-  needsSorting := (List <> nil) and (List^.Next <> nil);
-  
-  if needsSorting then
-  begin
-    Sorted := nil;
-    
-    while List <> nil do
-    begin
-      Current := List;
-      List := List^.Next;
-      
-      if (Sorted = nil) or (Current^.Data.Manufacturer < Sorted^.Data.Manufacturer) then
-      begin
-        Current^.Next := Sorted;
-        Sorted := Current;
-      end
-      else
-      begin
-        Temp := Sorted;
-        
-        while (Temp^.Next <> nil) and (Current^.Data.Manufacturer >= Temp^.Next^.Data.Manufacturer) do
-          Temp := Temp^.Next;
-        
-        Current^.Next := Temp^.Next;
-        Temp^.Next := Current;
-      end;
-    end;
-    
-    List := Sorted;
-  end;
+  SortLinkedList(List, @ManufacturerComparator);
 end;
 
 // Получение нового уникального кода для комплектующей

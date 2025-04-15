@@ -1,6 +1,6 @@
 <mxfile host="Electron" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.0.16 Chrome/132.0.6834.196 Electron/34.2.0 Safari/537.36" version="26.0.16">
   <diagram name="Page-1" id="kt32xEdA0w1SGrO74Og1">
-    <mxGraphModel dx="3095" dy="2000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="977" dy="632" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -830,37 +830,40 @@
           <mxGeometry x="15" y="1200" width="130" height="30" as="geometry" />
         </mxCell>
         <mxCell id="RF2BKd0cXhXIbQiK44xn-329" value="&lt;span style=&quot;text-align: left;&quot;&gt;HandleDeleteOrder&lt;/span&gt;" style="html=1;dashed=0;whiteSpace=wrap;shape=mxgraph.dfd.start" parent="1" vertex="1">
-          <mxGeometry x="327.25" y="1890" width="120" height="30" as="geometry" />
+          <mxGeometry x="455" y="2177.5" width="120" height="30" as="geometry" />
         </mxCell>
         <mxCell id="RF2BKd0cXhXIbQiK44xn-330" value="&lt;span style=&quot;text-align: left;&quot;&gt;HandleDeleteCompatibility&lt;/span&gt;" style="html=1;dashed=0;whiteSpace=wrap;shape=mxgraph.dfd.start" parent="1" vertex="1">
-          <mxGeometry x="287.25" y="1965" width="160" height="30" as="geometry" />
+          <mxGeometry x="480" y="2017.5" width="160" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="-0WHRlzGujEeCnyXhffO-282" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="RF2BKd0cXhXIbQiK44xn-331" target="-0WHRlzGujEeCnyXhffO-281">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="RF2BKd0cXhXIbQiK44xn-331" value="&lt;span style=&quot;text-align: left;&quot;&gt;HandleDeleteComponent&lt;/span&gt;" style="html=1;dashed=0;whiteSpace=wrap;shape=mxgraph.dfd.start" parent="1" vertex="1">
-          <mxGeometry x="297.25" y="1925" width="150" height="30" as="geometry" />
+          <mxGeometry x="20" y="1820" width="150" height="30" as="geometry" />
         </mxCell>
         <mxCell id="RF2BKd0cXhXIbQiK44xn-332" value="&lt;span style=&quot;text-align: left;&quot;&gt;HandleDeleteComponentType&lt;/span&gt;" style="html=1;dashed=0;whiteSpace=wrap;shape=mxgraph.dfd.start" parent="1" vertex="1">
-          <mxGeometry x="277.25" y="2005" width="170" height="30" as="geometry" />
+          <mxGeometry x="475" y="2057.5" width="170" height="30" as="geometry" />
         </mxCell>
         <mxCell id="RF2BKd0cXhXIbQiK44xn-333" value="&lt;span style=&quot;text-align: left;&quot;&gt;HandleEditOrder&lt;/span&gt;" style="html=1;dashed=0;whiteSpace=wrap;shape=mxgraph.dfd.start" parent="1" vertex="1">
-          <mxGeometry x="337.25" y="2052.5" width="110" height="30" as="geometry" />
+          <mxGeometry x="952" y="2050" width="110" height="30" as="geometry" />
         </mxCell>
         <mxCell id="RF2BKd0cXhXIbQiK44xn-334" value="&lt;span style=&quot;text-align: left;&quot;&gt;HandleEditCompatibility&lt;/span&gt;" style="html=1;dashed=0;whiteSpace=wrap;shape=mxgraph.dfd.start" parent="1" vertex="1">
-          <mxGeometry x="297.25" y="2127.5" width="150" height="30" as="geometry" />
+          <mxGeometry x="912" y="2125" width="150" height="30" as="geometry" />
         </mxCell>
         <mxCell id="RF2BKd0cXhXIbQiK44xn-335" value="&lt;span style=&quot;text-align: left;&quot;&gt;HandleEditComponent&lt;/span&gt;" style="html=1;dashed=0;whiteSpace=wrap;shape=mxgraph.dfd.start" parent="1" vertex="1">
-          <mxGeometry x="307.25" y="2087.5" width="140" height="30" as="geometry" />
+          <mxGeometry x="922" y="2085" width="140" height="30" as="geometry" />
         </mxCell>
         <mxCell id="RF2BKd0cXhXIbQiK44xn-336" value="&lt;span style=&quot;text-align: left;&quot;&gt;HandleEditComponentType&lt;/span&gt;" style="html=1;dashed=0;whiteSpace=wrap;shape=mxgraph.dfd.start" parent="1" vertex="1">
-          <mxGeometry x="287.25" y="2167.5" width="160" height="30" as="geometry" />
+          <mxGeometry x="902" y="2165" width="160" height="30" as="geometry" />
         </mxCell>
         <mxCell id="RF2BKd0cXhXIbQiK44xn-337" value="&lt;span style=&quot;text-align: left;&quot;&gt;HandleCreateOrder&lt;/span&gt;" style="html=1;dashed=0;whiteSpace=wrap;shape=mxgraph.dfd.start" parent="1" vertex="1">
-          <mxGeometry x="327.25" y="2252.5" width="120" height="30" as="geometry" />
+          <mxGeometry x="943" y="2240" width="120" height="30" as="geometry" />
         </mxCell>
         <mxCell id="RF2BKd0cXhXIbQiK44xn-338" value="&lt;span style=&quot;text-align: left;&quot;&gt;HandleFindComputerConfigurations&lt;/span&gt;" style="html=1;dashed=0;whiteSpace=wrap;shape=mxgraph.dfd.start" parent="1" vertex="1">
-          <mxGeometry x="62.75" y="1962.5" width="210" height="30" as="geometry" />
+          <mxGeometry x="870" y="1880" width="210" height="30" as="geometry" />
         </mxCell>
         <mxCell id="RF2BKd0cXhXIbQiK44xn-339" value="&lt;span style=&quot;text-align: left;&quot;&gt;HandleFindCompatibleComponentsOfType&lt;/span&gt;" style="html=1;dashed=0;whiteSpace=wrap;shape=mxgraph.dfd.start" parent="1" vertex="1">
-          <mxGeometry x="32.75" y="2042.5" width="240" height="30" as="geometry" />
+          <mxGeometry x="884" y="1937.5" width="240" height="30" as="geometry" />
         </mxCell>
         <mxCell id="RF2BKd0cXhXIbQiK44xn-434" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="RF2BKd0cXhXIbQiK44xn-341" target="RF2BKd0cXhXIbQiK44xn-344" edge="1">
           <mxGeometry relative="1" as="geometry" />
@@ -1749,6 +1752,18 @@
         </mxCell>
         <mxCell id="-0WHRlzGujEeCnyXhffO-277" value="вывести сообщение об ошибке" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
           <mxGeometry x="686.73" y="1520" width="110" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="-0WHRlzGujEeCnyXhffO-284" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="-0WHRlzGujEeCnyXhffO-281" target="-0WHRlzGujEeCnyXhffO-283">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-0WHRlzGujEeCnyXhffO-281" value="вывести записи" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+          <mxGeometry x="35" y="1870" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="-0WHRlzGujEeCnyXhffO-283" value="получить от пользователя идентификатор записи для удаления" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+          <mxGeometry x="7.5" y="1950" width="175" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="-0WHRlzGujEeCnyXhffO-285" value="" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;" vertex="1" parent="1">
+          <mxGeometry x="35" y="2043" width="120" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

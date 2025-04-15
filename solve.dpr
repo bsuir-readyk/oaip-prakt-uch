@@ -546,12 +546,12 @@ begin
       
       9: begin // Выход без сохранения
         exitWithSave := False;
-        exitProgram := true;
+        exitProgram := True;
       end;
       
       10: begin // Выход с сохранением
         exitWithSave := True;
-        exitProgram := true;
+        exitProgram := True;
       end;
     end;
   end;
