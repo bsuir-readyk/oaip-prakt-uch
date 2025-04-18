@@ -5,6 +5,12 @@ interface
 uses
   SysUtils, Types, UI;
 
+// Типы функций-компараторов
+type
+  // Компаратор для поиска заказа при удалении
+  // Возвращает True, если заказ соответствует критерию удаления
+  TOrderDeleteComparator = function(const Order: TOrder): Boolean;
+
 // Инициализация списка заказов
 procedure InitOrdersList;
 
@@ -13,6 +19,12 @@ procedure FreeOrdersList;
 
 // Добавление заказа в список
 procedure AddOrder(const Order: TOrder);
+
+// Создание компаратора для удаления заказа по номеру
+function CreateDeleteOrderByNumberComparator(OrderNumber: Integer): TOrderDeleteComparator;
+
+// Обобщенная функция удаления заказа с использованием компаратора
+function DeleteOrderWithComparator(var List: POrderNode; Comparator: TOrderDeleteComparator): Boolean;
 
 // Удаление заказа из списка по номеру
 function DeleteOrder(OrderNumber: Integer): Boolean;
@@ -72,18 +84,31 @@ begin
   end;
 end;
 
-// Удаление заказа из списка по номеру
-function DeleteOrder(OrderNumber: Integer): Boolean;
+// Создание компаратора для удаления заказа по номеру
+function CreateDeleteOrderByNumberComparator(OrderNumber: Integer): TOrderDeleteComparator;
+
+  // Локальная функция-компаратор для удаления по номеру заказа
+  function OrderNumberComparator(const Order: TOrder): Boolean;
+  begin
+    OrderNumberComparator := Order.OrderNumber = OrderNumber;
+  end;
+
+begin
+  CreateDeleteOrderByNumberComparator := @OrderNumberComparator;
+end;
+
+// Обобщенная функция удаления заказа с использованием компаратора
+function DeleteOrderWithComparator(var List: POrderNode; Comparator: TOrderDeleteComparator): Boolean;
 var
   Current, Previous: POrderNode;
   Found: Boolean;
 begin
-  Current := DataLists.Orders;
+  Current := List;
   Previous := nil;
   Found := False;
   
-  // Ищем заказ с заданным номером
-  while (Current <> nil) and (Current^.Data.OrderNumber <> OrderNumber) do
+  // Ищем заказ, соответствующий критерию компаратора
+  while (Current <> nil) and (not Comparator(Current^.Data)) do
   begin
     Previous := Current;
     Current := Current^.Next;
@@ -93,11 +118,21 @@ begin
   if Current <> nil then
   begin
     if Previous = nil then
-      DataLists.Orders := Current^.Next
+      List := Current^.Next
     else
       Previous^.Next := Current^.Next;
     
     Dispose(Current);
+    Found := True;
+  end;
+  
+  Result := Found;
+end;
+
+// Удаление заказа из списка по номеру
+function DeleteOrder(OrderNumber: Integer): Boolean;
+begin
+  Result := DeleteOrderWithComparator(DataLists.Orders, CreateDeleteOrderByNumberComparator(OrderNumber));
     Found := True;
   end;
   

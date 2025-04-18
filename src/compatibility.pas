@@ -5,6 +5,12 @@ interface
 uses
   SysUtils, Types, Components, UI;
 
+// Типы функций-компараторов
+type
+  // Компаратор для поиска записи о совместимости при удалении
+  // Возвращает True, если запись о совместимости соответствует критерию удаления
+  TCompatibilityDeleteComparator = function(const Compatibility: TCompatibility): Boolean;
+
 // Инициализация списка совместимости
 procedure InitCompatibilityList;
 
@@ -13,6 +19,12 @@ procedure FreeCompatibilityList;
 
 // Добавление записи о совместимости в список
 procedure AddCompatibility(const Compatibility: TCompatibility);
+
+// Создание компаратора для удаления записи о совместимости по кодам компонентов
+function CreateDeleteCompatibilityByCodesComparator(ComponentCode1, ComponentCode2: Integer): TCompatibilityDeleteComparator;
+
+// Обобщенная функция удаления записи о совместимости с использованием компаратора
+function DeleteCompatibilityWithComparator(var List: PCompatibilityNode; Comparator: TCompatibilityDeleteComparator): Boolean;
 
 // Удаление записи о совместимости из списка
 function DeleteCompatibility(ComponentCode1, ComponentCode2: Integer): Boolean;
@@ -89,33 +101,42 @@ begin
   end;
 end;
 
-// Удаление записи о совместимости из списка
-function DeleteCompatibility(ComponentCode1, ComponentCode2: Integer): Boolean;
+// Создание компаратора для удаления записи о совместимости по кодам компонентов
+function CreateDeleteCompatibilityByCodesComparator(ComponentCode1, ComponentCode2: Integer): TCompatibilityDeleteComparator;
+
+  // Локальная функция-компаратор для удаления по кодам компонентов
+  function CompatibilityCodesComparator(const Compatibility: TCompatibility): Boolean;
+  begin
+    CompatibilityCodesComparator := (Compatibility.ComponentCode1 = ComponentCode1) and
+              (Compatibility.ComponentCode2 = ComponentCode2);
+  end;
+
+begin
+  CreateDeleteCompatibilityByCodesComparator := @CompatibilityCodesComparator;
+end;
+
+// Обобщенная функция удаления записи о совместимости с использованием компаратора
+function DeleteCompatibilityWithComparator(var List: PCompatibilityNode; Comparator: TCompatibilityDeleteComparator): Boolean;
 var
   Current, Previous: PCompatibilityNode;
   Found: Boolean;
-  foundForward, foundReverse: Boolean;
 begin
-  Found := False;
-  foundForward := False;
-  
-  // Удаляем запись о совместимости в прямом направлении
-  Current := DataLists.Compatibilities;
+  Current := List;
   Previous := nil;
+  Found := False;
   
-  while (Current <> nil) and (not foundForward) do
+  // Ищем запись о совместимости, соответствующую критерию компаратора
+  while (Current <> nil) and (not Found) do
   begin
-    if (Current^.Data.ComponentCode1 = ComponentCode1) and
-       (Current^.Data.ComponentCode2 = ComponentCode2) then
+    if Comparator(Current^.Data) then
     begin
       if Previous = nil then
-        DataLists.Compatibilities := Current^.Next
+        List := Current^.Next
       else
         Previous^.Next := Current^.Next;
       
       Dispose(Current);
       Found := True;
-      foundForward := True;
     end
     else
     begin
@@ -123,32 +144,28 @@ begin
       Current := Current^.Next;
     end;
   end;
+  
+  Result := Found;
+end;
+
+// Удаление записи о совместимости из списка
+function DeleteCompatibility(ComponentCode1, ComponentCode2: Integer): Boolean;
+var
+  Found, FoundForward, FoundReverse: Boolean;
+begin
+  // Удаляем запись о совместимости в прямом направлении
+  FoundForward := DeleteCompatibilityWithComparator(
+    DataLists.Compatibilities,
+    CreateDeleteCompatibilityByCodesComparator(ComponentCode1, ComponentCode2)
+  );
   
   // Удаляем запись о совместимости в обратном направлении
-  foundReverse := False;
-  Current := DataLists.Compatibilities;
-  Previous := nil;
+  FoundReverse := DeleteCompatibilityWithComparator(
+    DataLists.Compatibilities,
+    CreateDeleteCompatibilityByCodesComparator(ComponentCode2, ComponentCode1)
+  );
   
-  while (Current <> nil) and (not foundReverse) do
-  begin
-    if (Current^.Data.ComponentCode1 = ComponentCode2) and
-       (Current^.Data.ComponentCode2 = ComponentCode1) then
-    begin
-      if Previous = nil then
-        DataLists.Compatibilities := Current^.Next
-      else
-        Previous^.Next := Current^.Next;
-      
-      Dispose(Current);
-      Found := True;
-      foundReverse := True;
-    end
-    else
-    begin
-      Previous := Current;
-      Current := Current^.Next;
-    end;
-  end;
+  Found := FoundForward or FoundReverse;
   
   DeleteCompatibility := Found;
 end;

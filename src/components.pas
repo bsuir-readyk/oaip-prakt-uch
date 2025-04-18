@@ -5,10 +5,15 @@ interface
 uses
   SysUtils, Types, UI;
 
-// Тип функции-компаратора для сравнения двух компонентов
-// Возвращает True, если первый компонент должен идти перед вторым
+// Типы функций-компараторов
 type
+  // Компаратор для сравнения двух компонентов при сортировке
+  // Возвращает True, если первый компонент должен идти перед вторым
   TComponentComparator = function(const Component1, Component2: TComponent): Boolean;
+  
+  // Компаратор для поиска компонента при удалении
+  // Возвращает True, если компонент соответствует критерию удаления
+  TComponentDeleteComparator = function(const Component: TComponent): Boolean;
 
 // Инициализация списка комплектующих
 procedure InitComponentsList;
@@ -18,6 +23,12 @@ procedure FreeComponentsList;
 
 // Добавление комплектующей в список
 procedure AddComponent(const Component: TComponent);
+
+// Создание компаратора для удаления по коду
+function CreateDeleteByCodeComparator(Code: Integer): TComponentDeleteComparator;
+
+// Обобщенная функция удаления с использованием компаратора
+function DeleteComponentWithComparator(var List: PComponentNode; Comparator: TComponentDeleteComparator): Boolean;
 
 // Удаление комплектующей из списка по коду
 function DeleteComponent(Code: Integer): Boolean;
@@ -103,18 +114,29 @@ begin
   end;
 end;
 
-// Удаление комплектующей из списка по коду
-function DeleteComponent(Code: Integer): Boolean;
+
+// Создание компаратора для удаления по коду
+function CreateDeleteByCodeComparator(Code: Integer): TComponentDeleteComparator;
+begin
+  function CodeComparator(const Component: TComponent): Boolean
+  begin
+    CodeComparator := Component.Code = Code;
+  end;
+  CreateDeleteByCodeComparator := CodeComparator;
+end;
+
+// Обобщенная функция удаления с использованием компаратора
+function DeleteComponentWithComparator(var List: PComponentNode; Comparator: TComponentDeleteComparator): Boolean;
 var
   Current, Previous: PComponentNode;
   Found: Boolean;
 begin
-  Current := DataLists.Components;
+  Current := List;
   Previous := nil;
   Found := False;
   
-  // Ищем комплектующую с заданным кодом
-  while (Current <> nil) and (Current^.Data.Code <> Code) do
+  // Ищем комплектующую, соответствующую критерию компаратора
+  while (Current <> nil) and (not Comparator(Current^.Data)) do
   begin
     Previous := Current;
     Current := Current^.Next;
@@ -124,7 +146,7 @@ begin
   if Current <> nil then
   begin
     if Previous = nil then
-      DataLists.Components := Current^.Next
+      List := Current^.Next
     else
       Previous^.Next := Current^.Next;
     
@@ -132,7 +154,13 @@ begin
     Found := True;
   end;
   
-  DeleteComponent := Found;
+  DeleteComponentWithComparator := Found;
+end;
+
+// Удаление комплектующей из списка по коду
+function DeleteComponent(Code: Integer): Boolean;
+begin
+  DeleteComponent := DeleteComponentWithComparator(DataLists.Components, CreateDeleteByCodeComparator(Code));
 end;
 
 // Редактирование комплектующей

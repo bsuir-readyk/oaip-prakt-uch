@@ -5,6 +5,12 @@ interface
 uses
   SysUtils, Types, UI;
 
+// Типы функций-компараторов
+type
+  // Компаратор для поиска типа компонента при удалении
+  // Возвращает True, если тип компонента соответствует критерию удаления
+  TComponentTypeDeleteComparator = function(const ComponentType: TComponentType): Boolean;
+
 // Инициализация списка типов комплектующих
 procedure InitComponentTypesList;
 
@@ -13,6 +19,12 @@ procedure FreeComponentTypesList;
 
 // Добавление типа комплектующей в список
 procedure AddComponentType(const ComponentType: TComponentType);
+
+// Создание компаратора для удаления типа по коду
+function CreateDeleteTypeByCodeComparator(Code: Integer): TComponentTypeDeleteComparator;
+
+// Обобщенная функция удаления типа с использованием компаратора
+function DeleteComponentTypeWithComparator(var List: PComponentTypeNode; Comparator: TComponentTypeDeleteComparator): Boolean;
 
 // Удаление типа комплектующей из списка по коду
 function DeleteComponentType(Code: Integer): Boolean;
@@ -75,18 +87,27 @@ begin
   end;
 end;
 
-// Удаление типа комплектующей из списка по коду
-function DeleteComponentType(Code: Integer): Boolean;
+// Создание компаратора для удаления типа по коду
+function CreateDeleteTypeByCodeComparator(Code: Integer): TComponentTypeDeleteComparator;
+begin
+  CreateDeleteTypeByCodeComparator := function(const ComponentType: TComponentType): Boolean
+  begin
+    CodeComparator := ComponentType.Code = Code;
+  end;
+end;
+
+// Обобщенная функция удаления типа с использованием компаратора
+function DeleteComponentTypeWithComparator(var List: PComponentTypeNode; Comparator: TComponentTypeDeleteComparator): Boolean;
 var
   Current, Previous: PComponentTypeNode;
   Found: Boolean;
 begin
-  Current := DataLists.ComponentTypes;
+  Current := List;
   Previous := nil;
   Found := False;
   
-  // Ищем тип комплектующей с заданным кодом
-  while (Current <> nil) and (Current^.Data.Code <> Code) do
+  // Ищем тип комплектующей, соответствующий критерию компаратора
+  while (Current <> nil) and (not Comparator(Current^.Data)) do
   begin
     Previous := Current;
     Current := Current^.Next;
@@ -96,7 +117,7 @@ begin
   if Current <> nil then
   begin
     if Previous = nil then
-      DataLists.ComponentTypes := Current^.Next
+      List := Current^.Next
     else
       Previous^.Next := Current^.Next;
     
@@ -104,7 +125,13 @@ begin
     Found := True;
   end;
   
-  DeleteComponentType := Found;
+  Result := Found;
+end;
+
+// Удаление типа комплектующей из списка по коду
+function DeleteComponentType(Code: Integer): Boolean;
+begin
+  Result := DeleteComponentTypeWithComparator(DataLists.ComponentTypes, CreateDeleteTypeByCodeComparator(Code));
 end;
 
 // Редактирование типа комплектующей
