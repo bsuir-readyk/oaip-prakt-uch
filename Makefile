@@ -27,6 +27,6 @@ clean:
 	rm -rv ./ppaslink.sh;\
 	rm -rv ./symbol_order.fpc;\
 	rm -rv ./link*.res;\
-	rm -rvI ./*.ppu ./*/*.ppu ./*/*/*.ppu;\
-	rm -rvI ./*.o ./*/*.o ./*/*/*.o; \
+	rm -rv ./*.ppu ./*/*.ppu ./*/*/*.ppu;\
+	rm -rv ./*.o ./*/*.o ./*/*/*.o; \
 	exit 0;

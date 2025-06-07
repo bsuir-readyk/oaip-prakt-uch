@@ -8,10 +8,10 @@ uses
   SysUtils, DataTypes, DynamicLists;
 
 const
-  COMPONENTS_FILE = 'components.dat';
-  COMPONENT_TYPES_FILE = 'component_types.dat';
-  COMPATIBILITY_FILE = 'compatibility.dat';
-  ORDERS_FILE = 'orders.dat';
+  COMPONENTS_FILE = 'data/components.dat';
+  COMPONENT_TYPES_FILE = 'data/component_types.dat';
+  COMPATIBILITY_FILE = 'data/compatibility.dat';
+  ORDERS_FILE = 'data/orders.dat';
 
 { Функции для работы с файлом типов комплектующих }
 function LoadComponentTypes(var List: TComponentTypeList; const FileName: string = COMPONENT_TYPES_FILE): Boolean;
@@ -32,7 +32,7 @@ function SaveOrders(const List: TOrderList; const FileName: string = ORDERS_FILE
 { Функции для сохранения результатов специальных функций в текстовые файлы }
 function SavePCBuildOptionsToTextFile(const List: TPCBuildOptionList; 
                                       const ComponentList: TComponentList;
-                                      const FileName: string = 'pc_build_options.txt'): Boolean;
+                                      const FileName: string = 'data/pc_build_options.txt'): Boolean;
 function SaveOrderToTextFile(const Order: TOrder; 
                             const BuildOption: TPCBuildOption;
                             const ComponentList: TComponentList;
@@ -373,7 +373,7 @@ begin
     
     // Записываем заголовок
     WriteLn(F, 'Варианты комплектации ПК');
-    WriteLn(F, '=======================');
+    WriteLn(F, '════════════════════════');
     WriteLn(F);
     
     // Проходим по списку вариантов комплектации
@@ -392,7 +392,7 @@ begin
         
         if ComponentNode <> nil then
         begin
-          WriteLn(F, '  - ', ComponentNode^.Data.Manufacturer, ' ', 
+          WriteLn(F, '  • ', ComponentNode^.Data.Manufacturer, ' ', 
                      ComponentNode^.Data.Model, ' (', 
                      ComponentNode^.Data.Price:0:2, ' руб.)');
         end;
@@ -430,7 +430,7 @@ begin
   
   // Если имя файла не указано, генерируем его на основе ID заказа
   if FileName = '' then
-    ActualFileName := 'order_confirmation_' + IntToStr(Order.ID) + '.txt'
+    ActualFileName := 'data/order_confirmation_' + IntToStr(Order.ID) + '.txt'
   else
     ActualFileName := FileName;
   
@@ -441,7 +441,7 @@ begin
     
     // Записываем информацию о заказе
     WriteLn(F, 'Подтверждение заказа #', Order.ID);
-    WriteLn(F, '=======================');
+    WriteLn(F, '═══════════════════════════════');
     WriteLn(F);
     WriteLn(F, 'Дата заказа: ', FormatDateTime('dd.mm.yyyy hh:nn', Order.OrderDate));
     WriteLn(F, 'Заказчик: ', Order.CustomerName);
@@ -458,7 +458,7 @@ begin
       
       if ComponentNode <> nil then
       begin
-        WriteLn(F, '  - ', ComponentNode^.Data.Manufacturer, ' ', 
+        WriteLn(F, '  • ', ComponentNode^.Data.Manufacturer, ' ', 
                    ComponentNode^.Data.Model, ' (', 
                    ComponentNode^.Data.Price:0:2, ' руб.)');
       end;

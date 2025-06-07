@@ -136,7 +136,7 @@ procedure ViewList(const ComponentTypesList: TComponentTypeList;
 var
   SubmenuChoice: Integer;
 begin
-  DisplayListSubmenu;DisplayComponentTypes
+  DisplayListSubmenu;
   SubmenuChoice := GetListSubmenuChoice;
   
   case SubmenuChoice of

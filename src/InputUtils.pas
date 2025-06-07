@@ -15,7 +15,7 @@ const
 // Функции для безопасного чтения различных типов данных
 function SafeReadInteger(const Prompt: string; MinValue: Integer = Low(Integer); MaxValue: Integer = High(Integer); 
                          const ErrorMsg: string = ''): Integer;
-function SafeReadFloat(const Prompt: string; MinValue: Real = -MaxSingle; MaxValue: Real = MaxSingle; 
+function SafeReadFloat(const Prompt: string; MinValue: Real = -1E38; MaxValue: Real = 1E38; 
                       const ErrorMsg: string = ''): Real;
 function SafeReadString(const Prompt: string; MinLength: Integer = 0; MaxLength: Integer = High(Integer); 
                        const ErrorMsg: string = ''): string;
@@ -26,6 +26,9 @@ function IsReturnToMenuCommand(const Input: string): Boolean;
 
 // Функция для проверки, хочет ли пользователь отменить текущую операцию
 function IsCancelCommand(const Input: string): Boolean;
+
+// Функция для безопасного подтверждения операций
+function SafeReadConfirmation(const Prompt: string; const ErrorMsg: string = ''): Boolean;
 
 implementation
 
@@ -208,6 +211,54 @@ end;
 function IsCancelCommand(const Input: string): Boolean;
 begin
   Result := (Input = CMD_CANCEL);
+end;
+
+function SafeReadConfirmation(const Prompt: string; const ErrorMsg: string = ''): Boolean;
+var
+  InputStr: string;
+  DefaultErrorMsg: string;
+begin
+  DefaultErrorMsg := Format('Пожалуйста, введите "да", "нет" или "%s" для возврата в меню', [CMD_RETURN_TO_MENU]);
+  
+  if ErrorMsg <> '' then
+    DefaultErrorMsg := ErrorMsg;
+  
+  repeat
+    Write(Prompt);
+    ReadLn(InputStr);
+    
+    // Проверка на команду возврата в меню
+    if IsReturnToMenuCommand(InputStr) then
+    begin
+      Result := False; // Специальное значение для индикации возврата в меню
+      Exit;
+    end;
+    
+    // Проверка на команду отмены
+    if IsCancelCommand(InputStr) then
+    begin
+      Result := False; // Специальное значение для индикации отмены
+      Exit;
+    end;
+    
+    // Проверка на "да"
+    if (InputStr = 'да') or (InputStr = 'Да') or (InputStr = 'ДА') or 
+       (InputStr = 'y') or (InputStr = 'Y') or (InputStr = 'yes') or (InputStr = 'Yes') then
+    begin
+      Result := True;
+      Exit;
+    end;
+    
+    // Проверка на "нет"
+    if (InputStr = 'нет') or (InputStr = 'Нет') or (InputStr = 'НЕТ') or 
+       (InputStr = 'n') or (InputStr = 'N') or (InputStr = 'no') or (InputStr = 'No') then
+    begin
+      Result := False;
+      Exit;
+    end;
+    
+    WriteLn(DefaultErrorMsg);
+  until False;
 end;
 
 end.

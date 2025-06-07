@@ -38,6 +38,8 @@ procedure DisplayMainMenu;
 function GetMenuChoice: Integer;
 procedure DisplayListSubmenu;
 function GetListSubmenuChoice: Integer;
+procedure DisplayAddDataSubmenu;
+function GetAddDataSubmenuChoice: Integer;
 procedure DisplaySpecialFunctionsSubmenu;
 function GetSpecialFunctionsSubmenuChoice: Integer;
 
@@ -46,6 +48,7 @@ procedure DisplayComponentTypes(const List: TComponentTypeList);
 procedure DisplayComponents(const List: TComponentList; const TypesList: TComponentTypeList);
 procedure DisplayCompatibility(const List: TCompatibilityList; const ComponentsList: TComponentList);
 procedure DisplayOrders(const List: TOrderList; const BuildOptionsList: TPCBuildOptionList);
+procedure DisplayOrdersDetailed(const List: TOrderList; const BuildOptionsList: TPCBuildOptionList; const ComponentsList: TComponentList);
 procedure DisplayPCBuildOptions(const List: TPCBuildOptionList; const ComponentsList: TComponentList);
 
 { Процедуры для ввода данных }
@@ -109,6 +112,23 @@ begin
                           'Ошибка: Выберите пункт подменю от 1 до 4.');
 end;
 
+procedure DisplayAddDataSubmenu;
+begin
+  ClearScreen;
+  WriteLn('=== ВЫБЕРИТЕ ТИП ДАННЫХ ДЛЯ ДОБАВЛЕНИЯ ===');
+  WriteLn('1. Типы комплектующих');
+  WriteLn('2. Комплектующие');
+  WriteLn('3. Совместимость комплектующих');
+  WriteLn('==================');
+  Write('Выберите тип данных: ');
+end;
+
+function GetAddDataSubmenuChoice: Integer;
+begin
+  Result := SafeReadInteger('', SUBMENU_COMPONENT_TYPES, SUBMENU_COMPATIBILITY,
+                          'Ошибка: Выберите пункт подменю от 1 до 3.');
+end;
+
 procedure DisplaySpecialFunctionsSubmenu;
 begin
   ClearScreen;
@@ -135,20 +155,20 @@ var
 begin
   ClearScreen;
   WriteLn('=== СПИСОК ТИПОВ КОМПЛЕКТУЮЩИХ ===');
-  WriteLn('Код типа | Название');
-  WriteLn('---------------------------');
+  WriteLn('Код типа │ Название');
+  WriteLn('---------┼------------------------');
   
   Current := List.Head;
   Count := 0;
   
   while Current <> nil do
   begin
-    WriteLn(Current^.Data.TypeCode:8, ' | ', Current^.Data.Name);
+    WriteLn(Current^.Data.TypeCode:8, ' │ ', Current^.Data.Name);
     Current := Current^.Next;
     Inc(Count);
   end;
   
-  WriteLn('---------------------------');
+  WriteLn('---------┴------------------------');
   WriteLn('Всего записей: ', Count);
   WriteLn;
   
@@ -163,8 +183,8 @@ var
 begin
   ClearScreen;
   WriteLn('=== СПИСОК КОМПЛЕКТУЮЩИХ ===');
-  WriteLn('Код | Тип | Производитель | Модель | Параметры | Цена | В наличии');
-  WriteLn('------------------------------------------------------------------');
+  WriteLn('Код │ Тип        │ Производитель │ Модель     │ Параметры       │ Цена     │ В наличии');
+  WriteLn('----┼------------┼---------------┼------------┼-----------------┼----------┼----------');
   
   Current := List.Head;
   Count := 0;
@@ -173,19 +193,19 @@ begin
   begin
     TypeName := GetComponentTypeName(Current^.Data.TypeCode, TypesList);
     
-    WriteLn(Current^.Data.Code:3, ' | ', 
-            TypeName:10, ' | ', 
-            Current^.Data.Manufacturer:12, ' | ', 
-            Current^.Data.Model:10, ' | ', 
-            Current^.Data.Parameters:15, ' | ', 
-            Current^.Data.Price:8:2, ' | ', 
-            Current^.Data.InStock:3);
+    WriteLn(Current^.Data.Code:3, ' │ ', 
+            TypeName:10, ' │ ', 
+            Current^.Data.Manufacturer:13, ' │ ', 
+            Current^.Data.Model:10, ' │ ', 
+            Current^.Data.Parameters:15, ' │ ', 
+            Current^.Data.Price:8:2, ' │ ', 
+            Current^.Data.InStock:9);
     
     Current := Current^.Next;
     Inc(Count);
   end;
   
-  WriteLn('------------------------------------------------------------------');
+  WriteLn('----┴------------┴---------------┴------------┴-----------------┴----------┴----------');
   WriteLn('Всего записей: ', Count);
   WriteLn;
   
@@ -200,8 +220,8 @@ var
 begin
   ClearScreen;
   WriteLn('=== СПИСОК СОВМЕСТИМОСТИ КОМПЛЕКТУЮЩИХ ===');
-  WriteLn('Код 1 | Комплектующая 1 | Код 2 | Комплектующая 2');
-  WriteLn('----------------------------------------------');
+  WriteLn('Код 1 │ Комплектующая 1      │ Код 2 │ Комплектующая 2');
+  WriteLn('------┼----------------------┼-------┼------------------------');
   
   Current := List.Head;
   Count := 0;
@@ -211,17 +231,17 @@ begin
     Component1 := FindComponent(ComponentsList, Current^.Data.ComponentCode1);
     Component2 := FindComponent(ComponentsList, Current^.Data.ComponentCode2);
     
-    Write(Current^.Data.ComponentCode1:5, ' | ');
+    Write(Current^.Data.ComponentCode1:5, ' │ ');
     
     if Component1 <> nil then
-      Write(Component1^.Data.Manufacturer, ' ', Component1^.Data.Model:15)
+      Write((Component1^.Data.Manufacturer + ' ' + Component1^.Data.Model):20)
     else
       Write('Неизвестно':20);
     
-    Write(' | ', Current^.Data.ComponentCode2:5, ' | ');
+    Write(' │ ', Current^.Data.ComponentCode2:5, ' │ ');
     
     if Component2 <> nil then
-      WriteLn(Component2^.Data.Manufacturer, ' ', Component2^.Data.Model:15)
+      WriteLn((Component2^.Data.Manufacturer + ' ' + Component2^.Data.Model):20)
     else
       WriteLn('Неизвестно':20);
     
@@ -229,7 +249,7 @@ begin
     Inc(Count);
   end;
   
-  WriteLn('----------------------------------------------');
+  WriteLn('------┴----------------------┴-------┴------------------------');
   WriteLn('Всего записей: ', Count);
   WriteLn;
   
@@ -244,8 +264,8 @@ var
 begin
   ClearScreen;
   WriteLn('=== СПИСОК ЗАКАЗОВ ===');
-  WriteLn('ID | Вариант сборки | Заказчик | Телефон | Дата заказа | Стоимость');
-  WriteLn('----------------------------------------------------------------');
+  WriteLn('ID │ Вариант │ Заказчик     │ Телефон  │ Дата заказа │ Стоимость │ Компонентов');
+  WriteLn('---┼---------┼--------------┼----------┼-------------┼-----------┼------------');
   
   Current := List.Head;
   Count := 0;
@@ -254,23 +274,87 @@ begin
   begin
     BuildOption := FindPCBuildOption(BuildOptionsList, Current^.Data.BuildOptionID);
     
-    Write(Current^.Data.ID:2, ' | ', 
-          Current^.Data.BuildOptionID:14, ' | ', 
-          Current^.Data.CustomerName:15, ' | ', 
-          Current^.Data.CustomerPhone:10, ' | ', 
-          FormatDateTime('dd.mm.yyyy', Current^.Data.OrderDate):10, ' | ');
+    Write(Current^.Data.ID:2, ' │ ', 
+          Current^.Data.BuildOptionID:7, ' │ ', 
+          Current^.Data.CustomerName:12, ' │ ', 
+          Current^.Data.CustomerPhone:8, ' │ ', 
+          FormatDateTime('dd.mm.yyyy', Current^.Data.OrderDate):11, ' │ ');
     
     if BuildOption <> nil then
-      WriteLn(BuildOption^.Data.TotalPrice:8:2)
+    begin
+      Write(BuildOption^.Data.TotalPrice:9:2, ' │ ');
+      WriteLn(Length(BuildOption^.Data.ComponentCodes):11);
+    end
     else
-      WriteLn('Неизвестно');
+      WriteLn(' Неизвестно │  Неизвестно');
     
     Current := Current^.Next;
     Inc(Count);
   end;
   
-  WriteLn('----------------------------------------------------------------');
+  WriteLn('---┴---------┴--------------┴----------┴-------------┴-----------┴------------');
   WriteLn('Всего записей: ', Count);
+  WriteLn;
+  
+  PressEnterToContinue;
+end;
+
+procedure DisplayOrdersDetailed(const List: TOrderList; const BuildOptionsList: TPCBuildOptionList; const ComponentsList: TComponentList);
+var
+  Current: POrderNode;
+  Count, i: Integer;
+  BuildOption: PPCBuildOptionNode;
+  ComponentNode: PComponentNode;
+begin
+  ClearScreen;
+  WriteLn('=== ПОДРОБНЫЙ СПИСОК ЗАКАЗОВ ===');
+  
+  Current := List.Head;
+  Count := 0;
+  
+  while Current <> nil do
+  begin
+    Inc(Count);
+    WriteLn;
+    WriteLn('Заказ #', Current^.Data.ID);
+    WriteLn('══════════════════════════════════════════════════════════════');
+    WriteLn('Заказчик: ', Current^.Data.CustomerName);
+    WriteLn('Телефон: ', Current^.Data.CustomerPhone);
+    WriteLn('Дата заказа: ', FormatDateTime('dd.mm.yyyy hh:nn', Current^.Data.OrderDate));
+    WriteLn('Вариант сборки: #', Current^.Data.BuildOptionID);
+    
+    BuildOption := FindPCBuildOption(BuildOptionsList, Current^.Data.BuildOptionID);
+    if BuildOption <> nil then
+    begin
+      WriteLn('Общая стоимость: ', BuildOption^.Data.TotalPrice:0:2, ' руб.');
+      WriteLn('Количество компонентов: ', Length(BuildOption^.Data.ComponentCodes));
+      WriteLn('Состав комплектации:');
+      
+      for i := 0 to Length(BuildOption^.Data.ComponentCodes) - 1 do
+      begin
+        ComponentNode := FindComponent(ComponentsList, BuildOption^.Data.ComponentCodes[i]);
+        if ComponentNode <> nil then
+        begin
+          WriteLn('  • ', ComponentNode^.Data.Manufacturer, ' ', 
+                       ComponentNode^.Data.Model, ' — ', 
+                       ComponentNode^.Data.Price:0:2, ' руб.');
+        end
+        else
+          WriteLn('  • Неизвестный компонент (код: ', BuildOption^.Data.ComponentCodes[i], ')');
+      end;
+    end
+    else
+    begin
+      WriteLn('Общая стоимость: Неизвестно (вариант сборки не найден)');
+      WriteLn('Состав комплектации: Недоступен');
+    end;
+    
+    Current := Current^.Next;
+  end;
+  
+  WriteLn;
+  WriteLn('══════════════════════════════════════════════════════════════');
+  WriteLn('Всего заказов: ', Count);
   WriteLn;
   
   PressEnterToContinue;
@@ -300,7 +384,7 @@ begin
       
       if ComponentNode <> nil then
       begin
-        WriteLn('  - ', ComponentNode^.Data.Manufacturer, ' ', 
+        WriteLn('  • ', ComponentNode^.Data.Manufacturer, ' ', 
                      ComponentNode^.Data.Model, ' (', 
                      ComponentNode^.Data.Price:0:2, ' руб.)');
       end;
@@ -402,16 +486,20 @@ end;
 function InputCompatibility(var Compatibility: TCompatibility; const ComponentsList: TComponentList): Boolean;
 var
   Component1, Component2: PComponentNode;
+  ComponentCode1, ComponentCode2: Integer;
 begin
   Result := False;
   
   try
-    
     // Ввод и проверка кода первой комплектующей
     repeat
-      Write('Введите код первой комплектующей: ');
-      ReadLn(Compatibility.ComponentCode1);
+      ComponentCode1 := SafeReadInteger('Введите код первой комплектующей: ', 1);
       
+      // Проверка на команду возврата в меню или отмены
+      if ComponentCode1 < 1 then
+        Exit;
+      
+      Compatibility.ComponentCode1 := ComponentCode1;
       Component1 := FindComponent(ComponentsList, Compatibility.ComponentCode1);
       if Component1 = nil then
         WriteLn('Ошибка: Комплектующая с кодом ', Compatibility.ComponentCode1, ' не найдена. Пожалуйста, введите существующий код.');
@@ -419,13 +507,24 @@ begin
     
     // Ввод и проверка кода второй комплектующей
     repeat
-      Write('Введите код второй комплектующей (совместимой с первой): ');
-      ReadLn(Compatibility.ComponentCode2);
+      ComponentCode2 := SafeReadInteger('Введите код второй комплектующей (совместимой с первой): ', 1);
       
+      // Проверка на команду возврата в меню или отмены
+      if ComponentCode2 < 1 then
+        Exit;
+      
+      Compatibility.ComponentCode2 := ComponentCode2;
       Component2 := FindComponent(ComponentsList, Compatibility.ComponentCode2);
       if Component2 = nil then
         WriteLn('Ошибка: Комплектующая с кодом ', Compatibility.ComponentCode2, ' не найдена. Пожалуйста, введите существующий код.');
     until Component2 <> nil;
+    
+    // Проверка, что коды различны
+    if Compatibility.ComponentCode1 = Compatibility.ComponentCode2 then
+    begin
+      WriteLn('Ошибка: Нельзя создать запись о совместимости комплектующей с самой собой.');
+      Exit;
+    end;
     
     Result := True;
   except
@@ -437,6 +536,7 @@ function InputOrder(var Order: TOrder; const BuildOptionsList: TPCBuildOptionLis
 var
   BuildOption: PPCBuildOptionNode;
   TempName, TempPhone: string;
+  BuildOptionID: Integer;
 begin
   Result := False;
   
@@ -447,20 +547,26 @@ begin
     
     // Ввод и проверка ID варианта комплектации
     repeat
-      Write('Введите ID варианта комплектации: ');
-      ReadLn(Order.BuildOptionID);
+      BuildOptionID := SafeReadInteger('Введите ID варианта комплектации: ', 1);
       
+      // Проверка на команду возврата в меню или отмены
+      if BuildOptionID < 1 then
+        Exit;
+      
+      Order.BuildOptionID := BuildOptionID;
       BuildOption := FindPCBuildOption(BuildOptionsList, Order.BuildOptionID);
       if BuildOption = nil then
         WriteLn('Ошибка: Вариант комплектации с ID ', Order.BuildOptionID, ' не найден. Пожалуйста, введите существующий ID.');
     until BuildOption <> nil;
     
-    Write('Введите имя заказчика: ');
-    ReadLn(TempName);
+    TempName := SafeReadString('Введите имя заказчика: ', 1, MAX_STRING_LENGTH);
+    if IsReturnToMenuCommand(TempName) or IsCancelCommand(TempName) then
+      Exit;
     Order.CustomerName := StringToFixed(TempName);
     
-    Write('Введите телефон заказчика: ');
-    ReadLn(TempPhone);
+    TempPhone := SafeReadString('Введите телефон заказчика: ', 1, MAX_STRING_LENGTH);
+    if IsReturnToMenuCommand(TempPhone) or IsCancelCommand(TempPhone) then
+      Exit;
     Order.CustomerPhone := StringToFixed(TempPhone);
     
     // Устанавливаем текущую дату и время
