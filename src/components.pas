@@ -114,11 +114,25 @@ begin
   end;
 end;
 
+procedure OuterProc;
+var
+  LocalFunc: function(x: Integer): Integer;
+begin
+  // Define the "nested" function as an anonymous function
+  LocalFunc := function(x: Integer): Integer
+  begin
+    Result := x * x;
+  end;
+
+  WriteLn('LocalFunc(5) = ', LocalFunc(5));
+end;
 
 // Создание компаратора для удаления по коду
 function CreateDeleteByCodeComparator(Code: Integer): TComponentDeleteComparator;
+var
+  CodeComparator: TComponentDeleteComparator;
 begin
-  function CodeComparator(const Component: TComponent): Boolean
+  CodeComparator := function(const Component: TComponent): Boolean
   begin
     CodeComparator := Component.Code = Code;
   end;

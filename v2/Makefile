@@ -27,6 +27,11 @@ clean:
 	rm -rv ./ppaslink.sh;\
 	rm -rv ./symbol_order.fpc;\
 	rm -rv ./link*.res;\
-	rm -rvI ./*.ppu ./*/*.ppu ./*/*/*.ppu;\
-	rm -rvI ./*.o ./*/*.o ./*/*/*.o; \
+	find . -name '*.ppu' -exec rm -- {} +;\
+	find . -name '*.o' -exec rm -- {} +;\
+	find ./src -name '*.vscode' -exec rm -r -- {} +;\
 	exit 0;
+
+
+code_ent:
+	@ls ./src/entities | xargs -I % code ./src/entities/%

@@ -5,57 +5,27 @@ interface
 uses
   SysUtils, Crt, Types;
 
-// Вывод главного меню
 procedure ShowMainMenu;
-
-// Вывод подменю просмотра списков
 procedure ShowViewSubmenu;
-
-// Вывод подменю сортировки
 procedure ShowSortSubmenu;
-
-// Вывод подменю добавления данных
 procedure ShowAddSubmenu;
-
-// Вывод подменю удаления данных
 procedure ShowDeleteSubmenu;
-
-// Вывод подменю редактирования данных
 procedure ShowEditSubmenu;
-
-// Вывод подменю специальных функций
 procedure ShowSpecialFunctionsSubmenu;
-
-// Безопасный ввод целого числа
-function SafeReadInteger(const Prompt: string; MinValue, MaxValue: Integer): Integer;
-
-// Безопасный ввод вещественного числа
-function SafeReadReal(const Prompt: string; MinValue, MaxValue: Real): Real;
-
-// Безопасный ввод строки
-function SafeReadString(const Prompt: string): string;
-
-// Безопасный ввод булевого значения
-function SafeReadBoolean(const Prompt: string): Boolean;
-
-// Ожидание нажатия клавиши
 procedure WaitForKey;
-
-// Вывод разделительной линии
 procedure PrintSeparator;
-
-// Вывод заголовка
 procedure PrintHeader(const Title: string);
-
 procedure PrintTableHorizontalLine(const ColumnWidths: array of Integer; LineType: Char);
-
 procedure PrintTableRow(const Values: array of string; const ColumnWidths: array of Integer; const Alignments: array of Char);
 
 function PadString(const S: string; Width: Integer; Alignment: Char): string;
+function SafeReadInteger(const Prompt: string; MinValue, MaxValue: Integer): Integer;
+function SafeReadReal(const Prompt: string; MinValue, MaxValue: Real): Real;
+function SafeReadString(const Prompt: string): string;
+function SafeReadBoolean(const Prompt: string): Boolean;
 
 implementation
 
-// Вывод главного меню
 procedure ShowMainMenu;
 begin
   ClrScr;
@@ -73,7 +43,6 @@ begin
   PrintSeparator;
 end;
 
-// Вывод подменю просмотра списков
 procedure ShowViewSubmenu;
 begin
   ClrScr;
@@ -86,7 +55,6 @@ begin
   PrintSeparator;
 end;
 
-// Вывод подменю сортировки
 procedure ShowSortSubmenu;
 begin
   ClrScr;
@@ -98,7 +66,6 @@ begin
   PrintSeparator;
 end;
 
-// Вывод подменю добавления данных
 procedure ShowAddSubmenu;
 begin
   ClrScr;
@@ -110,7 +77,6 @@ begin
   PrintSeparator;
 end;
 
-// Вывод подменю удаления данных
 procedure ShowDeleteSubmenu;
 begin
   ClrScr;
@@ -123,7 +89,6 @@ begin
   PrintSeparator;
 end;
 
-// Вывод подменю редактирования данных
 procedure ShowEditSubmenu;
 begin
   ClrScr;
@@ -136,7 +101,6 @@ begin
   PrintSeparator;
 end;
 
-// Вывод подменю специальных функций
 procedure ShowSpecialFunctionsSubmenu;
 begin
   ClrScr;
@@ -148,7 +112,6 @@ begin
   PrintSeparator;
 end;
 
-// Безопасный ввод целого числа
 function SafeReadInteger(const Prompt: string; MinValue, MaxValue: Integer): Integer;
 var
   S: string;
@@ -173,7 +136,6 @@ begin
   SafeReadInteger := Value;
 end;
 
-// Безопасный ввод вещественного числа
 function SafeReadReal(const Prompt: string; MinValue, MaxValue: Real): Real;
 var
   S: string;
@@ -198,7 +160,6 @@ begin
   SafeReadReal := Value;
 end;
 
-// Безопасный ввод строки
 function SafeReadString(const Prompt: string): string;
 var
   S: string;
@@ -221,7 +182,6 @@ begin
   SafeReadString := S;
 end;
 
-// Безопасный ввод булевого значения
 function SafeReadBoolean(const Prompt: string): Boolean;
 var
   S: string;
@@ -254,7 +214,6 @@ begin
   SafeReadBoolean := BoolValue;
 end;
 
-// Ожидание нажатия клавиши
 procedure WaitForKey;
 begin
   WriteLn;
@@ -262,13 +221,11 @@ begin
   ReadLn;
 end;
 
-// Вывод разделительной линии
 procedure PrintSeparator;
 begin
   WriteLn('----------------------------------------');
 end;
 
-// Вывод заголовка
 procedure PrintHeader(const Title: string);
 begin
   PrintSeparator;
@@ -277,7 +234,6 @@ begin
   WriteLn;
 end;
 
-// Функция для создания строки заданной длины из заданного символа
 function RepeatChar(Ch: string; Count: Integer): string;
 var
   i: Integer;
@@ -289,7 +245,6 @@ begin
   RepeatChar := res;
 end;
 
-// Функция для выравнивания текста по ширине ячейки
 function PadString(const S: string; Width: Integer; Alignment: Char): string;
 var
   Padding, res: string;
@@ -303,52 +258,51 @@ begin
     Padding := RepeatChar(' ', PaddingLength);
     
     case Alignment of
-      'L': res := S + Padding;      // Выравнивание по левому краю
-      'R': res := Padding + S;      // Выравнивание по правому краю
-      'C': begin                       // Выравнивание по центру
+      'L': res := S + Padding;     
+      'R': res := Padding + S;     
+      'C': begin                      
              Padding := RepeatChar(' ', PaddingLength div 2);
              res := Padding + S + Padding;
              if Length(res) < Width then
                res := res + ' ';
            end;
-      else res := S + Padding;      // По умолчанию - по левому краю
+      else res := S + Padding;     
     end;
   end;
   
   PadString := res;
 end;
 
-// Процедура для вывода горизонтальной линии таблицы
 procedure PrintTableHorizontalLine(const ColumnWidths: array of Integer; LineType: Char);
 var
   i: Integer;
 begin
   case LineType of
-    'T': begin // Верхняя линия
+    'T': begin
            Write('┌');
            for i := low(ColumnWidths) to High(ColumnWidths) do
            begin
-             Write(RepeatChar('─', ColumnWidths[i] + 2));
+             Write(RepeatChar('-', ColumnWidths[i] + 2));
              if i < High(ColumnWidths) then
                Write('┬');
            end;
            WriteLn('┐');
          end;
-    'M': begin // Средняя линия
+    'M': begin
            Write('├');
            for i := low(ColumnWidths) to High(ColumnWidths) do
            begin
-             Write(RepeatChar('─', ColumnWidths[i] + 2));
+             Write(RepeatChar('-', ColumnWidths[i] + 2));
              if i < High(ColumnWidths) then
                Write('┼');
            end;
            WriteLn('┤');
          end;
-    'B': begin // Нижняя линия
+    'B': begin
            Write('└');
            for i := low(ColumnWidths) to High(ColumnWidths) do
            begin
-             Write(RepeatChar('─', ColumnWidths[i] + 2));
+             Write(RepeatChar('-', ColumnWidths[i] + 2));
              if i < High(ColumnWidths) then
                Write('┴');
            end;
@@ -357,7 +311,6 @@ begin
   end;
 end;
 
-// Процедура для вывода строки таблицы
 procedure PrintTableRow(const Values: array of string; const ColumnWidths: array of Integer; const Alignments: array of Char);
 var
   i: Integer;

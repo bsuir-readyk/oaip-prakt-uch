@@ -42,6 +42,8 @@ var
   // Переменная для работы с типами комплектующих
   componentTypeNode: PComponentTypeNode;
 
+  temp: 
+
 begin
   // Инициализация всех списков
   InitComponentsList;
