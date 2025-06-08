@@ -66,6 +66,13 @@ function GetNextID(const List: TPCBuildOptionList): Integer; overload;
 function GetNextID(const List: TOrderList): Integer; overload;
 function GetComponentTypeName(TypeCode: Integer; const TypesList: TComponentTypeList): string;
 
+{ Глобальные счетчики для уникальных ID }
+var
+  NextComponentTypeID: Integer = 1;
+  NextComponentID: Integer = 1;
+  NextPCBuildOptionID: Integer = 1;
+  NextOrderID: Integer = 1;
+
 implementation
 
 { Реализация процедур для отображения меню и подменю }
@@ -596,17 +603,24 @@ var
   Current: PComponentTypeNode;
   MaxID: Integer;
 begin
-  MaxID := 0;
-  Current := List.Head;
-  
-  while Current <> nil do
+  // Инициализируем глобальный счетчик на основе существующих данных (только при первом вызове)
+  if NextComponentTypeID = 1 then
   begin
-    if Current^.Data.TypeCode > MaxID then
-      MaxID := Current^.Data.TypeCode;
-    Current := Current^.Next;
+    MaxID := 0;
+    Current := List.Head;
+    
+    while Current <> nil do
+    begin
+      if Current^.Data.TypeCode > MaxID then
+        MaxID := Current^.Data.TypeCode;
+      Current := Current^.Next;
+    end;
+    
+    NextComponentTypeID := MaxID + 1;
   end;
   
-  Result := MaxID + 1;
+  Result := NextComponentTypeID;
+  Inc(NextComponentTypeID);
 end;
 
 function GetNextID(const List: TComponentList): Integer;
@@ -614,17 +628,24 @@ var
   Current: PComponentNode;
   MaxID: Integer;
 begin
-  MaxID := 0;
-  Current := List.Head;
-  
-  while Current <> nil do
+  // Инициализируем глобальный счетчик на основе существующих данных (только при первом вызове)
+  if NextComponentID = 1 then
   begin
-    if Current^.Data.Code > MaxID then
-      MaxID := Current^.Data.Code;
-    Current := Current^.Next;
+    MaxID := 0;
+    Current := List.Head;
+    
+    while Current <> nil do
+    begin
+      if Current^.Data.Code > MaxID then
+        MaxID := Current^.Data.Code;
+      Current := Current^.Next;
+    end;
+    
+    NextComponentID := MaxID + 1;
   end;
   
-  Result := MaxID + 1;
+  Result := NextComponentID;
+  Inc(NextComponentID);
 end;
 
 function GetNextID(const List: TPCBuildOptionList): Integer;
@@ -632,17 +653,24 @@ var
   Current: PPCBuildOptionNode;
   MaxID: Integer;
 begin
-  MaxID := 0;
-  Current := List.Head;
-  
-  while Current <> nil do
+  // Инициализируем глобальный счетчик на основе существующих данных (только при первом вызове)
+  if NextPCBuildOptionID = 1 then
   begin
-    if Current^.Data.ID > MaxID then
-      MaxID := Current^.Data.ID;
-    Current := Current^.Next;
+    MaxID := 0;
+    Current := List.Head;
+    
+    while Current <> nil do
+    begin
+      if Current^.Data.ID > MaxID then
+        MaxID := Current^.Data.ID;
+      Current := Current^.Next;
+    end;
+    
+    NextPCBuildOptionID := MaxID + 1;
   end;
   
-  Result := MaxID + 1;
+  Result := NextPCBuildOptionID;
+  Inc(NextPCBuildOptionID);
 end;
 
 function GetNextID(const List: TOrderList): Integer;
@@ -650,17 +678,24 @@ var
   Current: POrderNode;
   MaxID: Integer;
 begin
-  MaxID := 0;
-  Current := List.Head;
-  
-  while Current <> nil do
+  // Инициализируем глобальный счетчик на основе существующих данных (только при первом вызове)
+  if NextOrderID = 1 then
   begin
-    if Current^.Data.ID > MaxID then
-      MaxID := Current^.Data.ID;
-    Current := Current^.Next;
+    MaxID := 0;
+    Current := List.Head;
+    
+    while Current <> nil do
+    begin
+      if Current^.Data.ID > MaxID then
+        MaxID := Current^.Data.ID;
+      Current := Current^.Next;
+    end;
+    
+    NextOrderID := MaxID + 1;
   end;
   
-  Result := MaxID + 1;
+  Result := NextOrderID;
+  Inc(NextOrderID);
 end;
 
 function GetComponentTypeName(TypeCode: Integer; const TypesList: TComponentTypeList): string;

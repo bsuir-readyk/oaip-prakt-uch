@@ -1,0 +1,4017 @@
+======== DataSearch.pas ========
+unit DataSearch;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  SysUtils,
+  DataTypes,
+  DynamicLists;
+
+// Функции поиска
+procedure SearchComponentsByPriceRange(const SourceList: TComponentList; MinPrice, MaxPrice: Real; var ResultList: TComponentList);
+procedure SearchComponentsByManufacturer(const SourceList: TComponentList; const Manufacturer: string; var ResultList: TComponentList);
+procedure SearchComponentsByType(const SourceList: TComponentList; TypeCode: Integer; var ResultList: TComponentList);
+procedure SearchComponentsByModel(const SourceList: TComponentList; const Model: string; var ResultList: TComponentList);
+procedure SearchComponentsByMinStock(const SourceList: TComponentList; MinStock: Integer; var ResultList: TComponentList);
+
+implementation
+
+// Функции поиска
+procedure SearchComponentsByPriceRange(const SourceList: TComponentList; MinPrice, MaxPrice: Real; var ResultList: TComponentList);
+var
+  Current: PComponentNode;
+begin
+  Current := SourceList.Head;
+  
+  while Current <> nil do
+  begin
+    if (Current^.Data.Price >= MinPrice) and (Current^.Data.Price <= MaxPrice) then
+      AddComponent(ResultList, Current^.Data);
+    
+    Current := Current^.Next;
+  end;
+end;
+
+procedure SearchComponentsByManufacturer(const SourceList: TComponentList; const Manufacturer: string; var ResultList: TComponentList);
+var
+  Current: PComponentNode;
+  CurrentManufacturer: string;
+begin
+  Current := SourceList.Head;
+  
+  while Current <> nil do
+  begin
+    CurrentManufacturer := FixedToString(Current^.Data.Manufacturer);
+    if Pos(LowerCase(Manufacturer), LowerCase(CurrentManufacturer)) > 0 then
+      AddComponent(ResultList, Current^.Data);
+    
+    Current := Current^.Next;
+  end;
+end;
+
+procedure SearchComponentsByType(const SourceList: TComponentList; TypeCode: Integer; var ResultList: TComponentList);
+var
+  Current: PComponentNode;
+begin
+  Current := SourceList.Head;
+  
+  while Current <> nil do
+  begin
+    if Current^.Data.TypeCode = TypeCode then
+      AddComponent(ResultList, Current^.Data);
+    
+    Current := Current^.Next;
+  end;
+end;
+
+procedure SearchComponentsByModel(const SourceList: TComponentList; const Model: string; var ResultList: TComponentList);
+var
+  Current: PComponentNode;
+  CurrentModel: string;
+begin
+  Current := SourceList.Head;
+  
+  while Current <> nil do
+  begin
+    CurrentModel := FixedToString(Current^.Data.Model);
+    if Pos(LowerCase(Model), LowerCase(CurrentModel)) > 0 then
+      AddComponent(ResultList, Current^.Data);
+    
+    Current := Current^.Next;
+  end;
+end;
+
+procedure SearchComponentsByMinStock(const SourceList: TComponentList; MinStock: Integer; var ResultList: TComponentList);
+var
+  Current: PComponentNode;
+begin
+  Current := SourceList.Head;
+  
+  while Current <> nil do
+  begin
+    if Current^.Data.InStock >= MinStock then
+      AddComponent(ResultList, Current^.Data);
+    
+    Current := Current^.Next;
+  end;
+end;
+
+end. 
+======== DataSorting.pas ========
+unit DataSorting;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  DataTypes,
+  DynamicLists;
+
+// Функции сортировки
+procedure SortComponentTypesByCode(var List: TComponentTypeList);
+procedure SortComponentsByPrice(var List: TComponentList);
+procedure SortComponentsByCode(var List: TComponentList);
+procedure SortComponentsByManufacturer(var List: TComponentList);
+procedure SortOrdersByDate(var List: TOrderList);
+
+implementation
+
+procedure SortComponentTypesByCode(var List: TComponentTypeList);
+var
+  i, j: Integer;
+  CurrentI: PComponentTypeNode;
+  TempData: TComponentType;
+begin
+  if (List.Head = nil) or (List.Head^.Next = nil) then
+    Exit; // Список пуст или содержит только один элемент
+  
+  // Пузырьковая сортировка для односвязного списка
+  for i := 0 to List.Count - 2 do
+  begin
+    CurrentI := List.Head;
+    
+    for j := 0 to List.Count - 2 - i do
+    begin
+      if (CurrentI^.Next <> nil) and (CurrentI^.Data.TypeCode > CurrentI^.Next^.Data.TypeCode) then
+      begin
+        // Обмен данными между узлами
+        TempData := CurrentI^.Data;
+        CurrentI^.Data := CurrentI^.Next^.Data;
+        CurrentI^.Next^.Data := TempData;
+      end;
+      
+      CurrentI := CurrentI^.Next;
+      
+      if CurrentI = nil then
+        Break;
+    end;
+  end;
+end;
+
+procedure SortComponentsByPrice(var List: TComponentList);
+var
+  i, j: Integer;
+  CurrentI: PComponentNode;
+  TempData: TComponent;
+begin
+  if (List.Head = nil) or (List.Head^.Next = nil) then
+    Exit;
+  
+  for i := 0 to List.Count - 2 do
+  begin
+    CurrentI := List.Head;
+    
+    for j := 0 to List.Count - 2 - i do
+    begin
+      if (CurrentI^.Next <> nil) and (CurrentI^.Data.Price > CurrentI^.Next^.Data.Price) then
+      begin
+        TempData := CurrentI^.Data;
+        CurrentI^.Data := CurrentI^.Next^.Data;
+        CurrentI^.Next^.Data := TempData;
+      end;
+      
+      CurrentI := CurrentI^.Next;
+      if CurrentI = nil then
+        Break;
+    end;
+  end;
+end;
+
+procedure SortComponentsByCode(var List: TComponentList);
+var
+  i, j: Integer;
+  CurrentI: PComponentNode;
+  TempData: TComponent;
+begin
+  if (List.Head = nil) or (List.Head^.Next = nil) then
+    Exit;
+  
+  for i := 0 to List.Count - 2 do
+  begin
+    CurrentI := List.Head;
+    
+    for j := 0 to List.Count - 2 - i do
+    begin
+      if (CurrentI^.Next <> nil) and (CurrentI^.Data.Code > CurrentI^.Next^.Data.Code) then
+      begin
+        TempData := CurrentI^.Data;
+        CurrentI^.Data := CurrentI^.Next^.Data;
+        CurrentI^.Next^.Data := TempData;
+      end;
+      
+      CurrentI := CurrentI^.Next;
+      if CurrentI = nil then
+        Break;
+    end;
+  end;
+end;
+
+procedure SortComponentsByManufacturer(var List: TComponentList);
+var
+  i, j: Integer;
+  CurrentI: PComponentNode;
+  TempData: TComponent;
+begin
+  if (List.Head = nil) or (List.Head^.Next = nil) then
+    Exit;
+  
+  for i := 0 to List.Count - 2 do
+  begin
+    CurrentI := List.Head;
+    
+    for j := 0 to List.Count - 2 - i do
+    begin
+      if (CurrentI^.Next <> nil) and 
+         (FixedToString(CurrentI^.Data.Manufacturer) > FixedToString(CurrentI^.Next^.Data.Manufacturer)) then
+      begin
+        TempData := CurrentI^.Data;
+        CurrentI^.Data := CurrentI^.Next^.Data;
+        CurrentI^.Next^.Data := TempData;
+      end;
+      
+      CurrentI := CurrentI^.Next;
+      if CurrentI = nil then
+        Break;
+    end;
+  end;
+end;
+
+procedure SortOrdersByDate(var List: TOrderList);
+var
+  i, j: Integer;
+  CurrentI: POrderNode;
+  TempData: TOrder;
+begin
+  if (List.Head = nil) or (List.Head^.Next = nil) then
+    Exit;
+  
+  for i := 0 to List.Count - 2 do
+  begin
+    CurrentI := List.Head;
+    
+    for j := 0 to List.Count - 2 - i do
+    begin
+      if (CurrentI^.Next <> nil) and (CurrentI^.Data.OrderDate > CurrentI^.Next^.Data.OrderDate) then
+      begin
+        TempData := CurrentI^.Data;
+        CurrentI^.Data := CurrentI^.Next^.Data;
+        CurrentI^.Next^.Data := TempData;
+      end;
+      
+      CurrentI := CurrentI^.Next;
+      if CurrentI = nil then
+        Break;
+    end;
+  end;
+end;
+
+end. 
+======== DataTypes.pas ========
+unit DataTypes;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  SysUtils;
+
+const
+  MAX_STRING_LENGTH = 255;
+
+type
+  { Строка фиксированной длины для использования в типизированных файлах }
+  TFixedString = array[0..MAX_STRING_LENGTH] of Char;
+
+  { Предварительные объявления типов указателей }
+  PComponentType = ^TComponentType;
+  PComponent = ^TComponent;
+  PCompatibility = ^TCompatibility;
+  PPCBuildOption = ^TPCBuildOption;
+  POrder = ^TOrder;
+  PComponentTypeNode = ^TComponentTypeNode;
+  PComponentNode = ^TComponentNode;
+  PCompatibilityNode = ^TCompatibilityNode;
+  PPCBuildOptionNode = ^TPCBuildOptionNode;
+  POrderNode = ^TOrderNode;
+
+  { Тип комплектующей }
+  TComponentType = record
+    TypeCode: Integer;     // Код типа комплектующей
+    Name: TFixedString;    // Название типа (например, "Процессор", "Видеокарта" и т.д.)
+  end;
+
+  { Комплектующая }
+  TComponent = record
+    Code: Integer;             // Уникальный код комплектующей
+    TypeCode: Integer;         // Код типа комплектующей (связь с TComponentType)
+    Manufacturer: TFixedString; // Фирма-изготовитель
+    Model: TFixedString;       // Модель
+    Parameters: TFixedString;  // Параметры (строка с описанием характеристик)
+    Price: Real;               // Цена
+    InStock: Integer;          // Количество в наличии
+  end;
+
+  { Совместимость комплектующих }
+  TCompatibility = record
+    ComponentCode1: Integer; // Код первой комплектующей
+    ComponentCode2: Integer; // Код второй комплектующей (совместимой с первой)
+  end;
+
+  { Вариант комплектации ПК }
+  TPCBuildOption = record
+    ID: Integer;                // Уникальный идентификатор варианта
+    ComponentCodes: array of Integer; // Массив кодов комплектующих в этой конфигурации
+    TotalPrice: Real;           // Общая стоимость конфигурации
+  end;
+
+  { Заказ }
+  TOrder = record
+    ID: Integer;                // Уникальный идентификатор заказа
+    BuildOptionID: Integer;     // ID выбранного варианта комплектации
+    CustomerName: TFixedString; // Имя заказчика
+    CustomerPhone: TFixedString; // Телефон заказчика
+    OrderDate: TDateTime;       // Дата заказа
+  end;
+
+  { Узел односвязного списка для TComponentType }
+  TComponentTypeNode = record
+    Data: TComponentType;
+    Next: PComponentTypeNode;
+  end;
+
+  { Узел односвязного списка для TComponent }
+  TComponentNode = record
+    Data: TComponent;
+    Next: PComponentNode;
+  end;
+
+  { Узел односвязного списка для TCompatibility }
+  TCompatibilityNode = record
+    Data: TCompatibility;
+    Next: PCompatibilityNode;
+  end;
+
+  { Узел односвязного списка для TPCBuildOption }
+  TPCBuildOptionNode = record
+    Data: TPCBuildOption;
+    Next: PPCBuildOptionNode;
+  end;
+
+  { Узел односвязного списка для TOrder }
+  TOrderNode = record
+    Data: TOrder;
+    Next: POrderNode;
+  end;
+
+  { Списки для каждого типа данных }
+  TComponentTypeList = record
+    Head: PComponentTypeNode;
+    Count: Integer;
+  end;
+
+  TComponentList = record
+    Head: PComponentNode;
+    Count: Integer;
+  end;
+
+  TCompatibilityList = record
+    Head: PCompatibilityNode;
+    Count: Integer;
+  end;
+
+  TPCBuildOptionList = record
+    Head: PPCBuildOptionNode;
+    Count: Integer;
+  end;
+
+  TOrderList = record
+    Head: POrderNode;
+    Count: Integer;
+  end;
+
+{ Функции для работы с фиксированными строками }
+function StringToFixed(const S: string): TFixedString;
+function FixedToString(const F: TFixedString): string;
+
+implementation
+
+{ Функции для работы с фиксированными строками }
+
+function StringToFixed(const S: string): TFixedString;
+var
+  i: Integer;
+begin
+  FillChar(Result, SizeOf(Result), 0);
+  for i := 1 to Length(S) do
+  begin
+    if i > MAX_STRING_LENGTH then
+      Break;
+    Result[i-1] := S[i];
+  end;
+end;
+
+function FixedToString(const F: TFixedString): string;
+var
+  i: Integer;
+begin
+  Result := '';
+  i := 0;
+  while (i <= MAX_STRING_LENGTH) and (F[i] <> #0) do
+  begin
+    Result := Result + F[i];
+    Inc(i);
+  end;
+end;
+
+end.
+======== DynamicLists.pas ========
+unit DynamicLists;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  SysUtils, DataTypes;
+
+{ Функции для работы со списком типов комплектующих }
+procedure InitComponentTypeList(var List: TComponentTypeList);
+function AddComponentType(var List: TComponentTypeList; const Data: TComponentType): Boolean;
+function RemoveComponentType(var List: TComponentTypeList; TypeCode: Integer): Boolean;
+function FindComponentType(const List: TComponentTypeList; TypeCode: Integer): PComponentTypeNode;
+procedure ClearComponentTypeList(var List: TComponentTypeList);
+
+{ Функции для работы со списком комплектующих }
+procedure InitComponentList(var List: TComponentList);
+function AddComponent(var List: TComponentList; const Data: TComponent): Boolean;
+function RemoveComponent(var List: TComponentList; Code: Integer): Boolean;
+function FindComponent(const List: TComponentList; Code: Integer): PComponentNode;
+procedure ClearComponentList(var List: TComponentList);
+
+{ Функции для работы со списком совместимости }
+procedure InitCompatibilityList(var List: TCompatibilityList);
+function AddCompatibility(var List: TCompatibilityList; const Data: TCompatibility): Boolean;
+function RemoveCompatibility(var List: TCompatibilityList; ComponentCode1, ComponentCode2: Integer): Boolean;
+function FindCompatibility(const List: TCompatibilityList; ComponentCode1, ComponentCode2: Integer): PCompatibilityNode;
+procedure ClearCompatibilityList(var List: TCompatibilityList);
+
+{ Функции для работы со списком вариантов комплектации }
+procedure InitPCBuildOptionList(var List: TPCBuildOptionList);
+function AddPCBuildOption(var List: TPCBuildOptionList; const Data: TPCBuildOption): Boolean;
+function RemovePCBuildOption(var List: TPCBuildOptionList; ID: Integer): Boolean;
+function FindPCBuildOption(const List: TPCBuildOptionList; ID: Integer): PPCBuildOptionNode;
+procedure ClearPCBuildOptionList(var List: TPCBuildOptionList);
+
+{ Функции для работы со списком заказов }
+procedure InitOrderList(var List: TOrderList);
+function AddOrder(var List: TOrderList; const Data: TOrder): Boolean;
+function RemoveOrder(var List: TOrderList; ID: Integer): Boolean;
+function FindOrder(const List: TOrderList; ID: Integer): POrderNode;
+procedure ClearOrderList(var List: TOrderList);
+
+implementation
+
+{ Реализация функций для работы со списком типов комплектующих }
+
+procedure InitComponentTypeList(var List: TComponentTypeList);
+begin
+  List.Head := nil;
+  List.Count := 0;
+end;
+
+function AddComponentType(var List: TComponentTypeList; const Data: TComponentType): Boolean;
+var
+  NewNode: PComponentTypeNode;
+begin
+  Result := False;
+  
+  // Проверяем, не существует ли уже тип с таким кодом
+  if FindComponentType(List, Data.TypeCode) <> nil then
+    Exit;
+  
+  // Создаем новый узел
+  New(NewNode);
+  NewNode^.Data := Data;
+  NewNode^.Next := List.Head;
+  
+  // Добавляем в начало списка
+  List.Head := NewNode;
+  Inc(List.Count);
+  
+  Result := True;
+end;
+
+function RemoveComponentType(var List: TComponentTypeList; TypeCode: Integer): Boolean;
+var
+  Current, Previous: PComponentTypeNode;
+begin
+  Result := False;
+  
+  if List.Head = nil then
+    Exit;
+  
+  // Если удаляемый элемент - первый в списке
+  if List.Head^.Data.TypeCode = TypeCode then
+  begin
+    Current := List.Head;
+    List.Head := List.Head^.Next;
+    Dispose(Current);
+    Dec(List.Count);
+    Result := True;
+    Exit;
+  end;
+  
+  // Ищем элемент в списке
+  Previous := List.Head;
+  Current := List.Head^.Next;
+  
+  while (Current <> nil) and (Current^.Data.TypeCode <> TypeCode) do
+  begin
+    Previous := Current;
+    Current := Current^.Next;
+  end;
+  
+  // Если элемент найден
+  if Current <> nil then
+  begin
+    Previous^.Next := Current^.Next;
+    Dispose(Current);
+    Dec(List.Count);
+    Result := True;
+  end;
+end;
+
+function FindComponentType(const List: TComponentTypeList; TypeCode: Integer): PComponentTypeNode;
+var
+  Current: PComponentTypeNode;
+begin
+  Result := nil;
+  Current := List.Head;
+  
+  while Current <> nil do
+  begin
+    if Current^.Data.TypeCode = TypeCode then
+    begin
+      Result := Current;
+      Exit;
+    end;
+    Current := Current^.Next;
+  end;
+end;
+
+procedure ClearComponentTypeList(var List: TComponentTypeList);
+var
+  Current, Next: PComponentTypeNode;
+begin
+  Current := List.Head;
+  
+  while Current <> nil do
+  begin
+    Next := Current^.Next;
+    Dispose(Current);
+    Current := Next;
+  end;
+  
+  List.Head := nil;
+  List.Count := 0;
+end;
+
+{ Реализация функций для работы со списком комплектующих }
+
+procedure InitComponentList(var List: TComponentList);
+begin
+  List.Head := nil;
+  List.Count := 0;
+end;
+
+function AddComponent(var List: TComponentList; const Data: TComponent): Boolean;
+var
+  NewNode: PComponentNode;
+begin
+  Result := False;
+  
+  // Проверяем, не существует ли уже комплектующая с таким кодом
+  if FindComponent(List, Data.Code) <> nil then
+    Exit;
+  
+  // Создаем новый узел
+  New(NewNode);
+  NewNode^.Data := Data;
+  NewNode^.Next := List.Head;
+  
+  // Добавляем в начало списка
+  List.Head := NewNode;
+  Inc(List.Count);
+  
+  Result := True;
+end;
+
+function RemoveComponent(var List: TComponentList; Code: Integer): Boolean;
+var
+  Current, Previous: PComponentNode;
+begin
+  Result := False;
+  
+  if List.Head = nil then
+    Exit;
+  
+  // Если удаляемый элемент - первый в списке
+  if List.Head^.Data.Code = Code then
+  begin
+    Current := List.Head;
+    List.Head := List.Head^.Next;
+    Dispose(Current);
+    Dec(List.Count);
+    Result := True;
+    Exit;
+  end;
+  
+  // Ищем элемент в списке
+  Previous := List.Head;
+  Current := List.Head^.Next;
+  
+  while (Current <> nil) and (Current^.Data.Code <> Code) do
+  begin
+    Previous := Current;
+    Current := Current^.Next;
+  end;
+  
+  // Если элемент найден
+  if Current <> nil then
+  begin
+    Previous^.Next := Current^.Next;
+    Dispose(Current);
+    Dec(List.Count);
+    Result := True;
+  end;
+end;
+
+function FindComponent(const List: TComponentList; Code: Integer): PComponentNode;
+var
+  Current: PComponentNode;
+begin
+  Result := nil;
+  Current := List.Head;
+  
+  while Current <> nil do
+  begin
+    if Current^.Data.Code = Code then
+    begin
+      Result := Current;
+      Exit;
+    end;
+    Current := Current^.Next;
+  end;
+end;
+
+procedure ClearComponentList(var List: TComponentList);
+var
+  Current, Next: PComponentNode;
+begin
+  Current := List.Head;
+  
+  while Current <> nil do
+  begin
+    Next := Current^.Next;
+    Dispose(Current);
+    Current := Next;
+  end;
+  
+  List.Head := nil;
+  List.Count := 0;
+end;
+
+{ Реализация функций для работы со списком совместимости }
+
+procedure InitCompatibilityList(var List: TCompatibilityList);
+begin
+  List.Head := nil;
+  List.Count := 0;
+end;
+
+function AddCompatibility(var List: TCompatibilityList; const Data: TCompatibility): Boolean;
+var
+  NewNode: PCompatibilityNode;
+begin
+  Result := False;
+  
+  // Проверяем, не существует ли уже такая запись о совместимости
+  if FindCompatibility(List, Data.ComponentCode1, Data.ComponentCode2) <> nil then
+    Exit;
+  
+  // Создаем новый узел
+  New(NewNode);
+  NewNode^.Data := Data;
+  NewNode^.Next := List.Head;
+  
+  // Добавляем в начало списка
+  List.Head := NewNode;
+  Inc(List.Count);
+  
+  Result := True;
+end;
+
+function RemoveCompatibility(var List: TCompatibilityList; ComponentCode1, ComponentCode2: Integer): Boolean;
+var
+  Current, Previous: PCompatibilityNode;
+begin
+  Result := False;
+  
+  if List.Head = nil then
+    Exit;
+  
+  // Если удаляемый элемент - первый в списке
+  if (List.Head^.Data.ComponentCode1 = ComponentCode1) and 
+     (List.Head^.Data.ComponentCode2 = ComponentCode2) then
+  begin
+    Current := List.Head;
+    List.Head := List.Head^.Next;
+    Dispose(Current);
+    Dec(List.Count);
+    Result := True;
+    Exit;
+  end;
+  
+  // Ищем элемент в списке
+  Previous := List.Head;
+  Current := List.Head^.Next;
+  
+  while (Current <> nil) and 
+        ((Current^.Data.ComponentCode1 <> ComponentCode1) or 
+         (Current^.Data.ComponentCode2 <> ComponentCode2)) do
+  begin
+    Previous := Current;
+    Current := Current^.Next;
+  end;
+  
+  // Если элемент найден
+  if Current <> nil then
+  begin
+    Previous^.Next := Current^.Next;
+    Dispose(Current);
+    Dec(List.Count);
+    Result := True;
+  end;
+end;
+
+function FindCompatibility(const List: TCompatibilityList; ComponentCode1, ComponentCode2: Integer): PCompatibilityNode;
+var
+  Current: PCompatibilityNode;
+begin
+  Result := nil;
+  Current := List.Head;
+  
+  while Current <> nil do
+  begin
+    if (Current^.Data.ComponentCode1 = ComponentCode1) and 
+       (Current^.Data.ComponentCode2 = ComponentCode2) then
+    begin
+      Result := Current;
+      Exit;
+    end;
+    Current := Current^.Next;
+  end;
+end;
+
+procedure ClearCompatibilityList(var List: TCompatibilityList);
+var
+  Current, Next: PCompatibilityNode;
+begin
+  Current := List.Head;
+  
+  while Current <> nil do
+  begin
+    Next := Current^.Next;
+    Dispose(Current);
+    Current := Next;
+  end;
+  
+  List.Head := nil;
+  List.Count := 0;
+end;
+
+{ Реализация функций для работы со списком вариантов комплектации }
+
+procedure InitPCBuildOptionList(var List: TPCBuildOptionList);
+begin
+  List.Head := nil;
+  List.Count := 0;
+end;
+
+function AddPCBuildOption(var List: TPCBuildOptionList; const Data: TPCBuildOption): Boolean;
+var
+  NewNode: PPCBuildOptionNode;
+begin
+  Result := False;
+  
+  // Проверяем, не существует ли уже вариант с таким ID
+  if FindPCBuildOption(List, Data.ID) <> nil then
+    Exit;
+  
+  // Создаем новый узел
+  New(NewNode);
+  NewNode^.Data := Data;
+  NewNode^.Next := List.Head;
+  
+  // Добавляем в начало списка
+  List.Head := NewNode;
+  Inc(List.Count);
+  
+  Result := True;
+end;
+
+function RemovePCBuildOption(var List: TPCBuildOptionList; ID: Integer): Boolean;
+var
+  Current, Previous: PPCBuildOptionNode;
+begin
+  Result := False;
+  
+  if List.Head = nil then
+    Exit;
+  
+  // Если удаляемый элемент - первый в списке
+  if List.Head^.Data.ID = ID then
+  begin
+    Current := List.Head;
+    List.Head := List.Head^.Next;
+    Dispose(Current);
+    Dec(List.Count);
+    Result := True;
+    Exit;
+  end;
+  
+  // Ищем элемент в списке
+  Previous := List.Head;
+  Current := List.Head^.Next;
+  
+  while (Current <> nil) and (Current^.Data.ID <> ID) do
+  begin
+    Previous := Current;
+    Current := Current^.Next;
+  end;
+  
+  // Если элемент найден
+  if Current <> nil then
+  begin
+    Previous^.Next := Current^.Next;
+    Dispose(Current);
+    Dec(List.Count);
+    Result := True;
+  end;
+end;
+
+function FindPCBuildOption(const List: TPCBuildOptionList; ID: Integer): PPCBuildOptionNode;
+var
+  Current: PPCBuildOptionNode;
+begin
+  Result := nil;
+  Current := List.Head;
+  
+  while Current <> nil do
+  begin
+    if Current^.Data.ID = ID then
+    begin
+      Result := Current;
+      Exit;
+    end;
+    Current := Current^.Next;
+  end;
+end;
+
+procedure ClearPCBuildOptionList(var List: TPCBuildOptionList);
+var
+  Current, Next: PPCBuildOptionNode;
+begin
+  Current := List.Head;
+  
+  while Current <> nil do
+  begin
+    Next := Current^.Next;
+    Dispose(Current);
+    Current := Next;
+  end;
+  
+  List.Head := nil;
+  List.Count := 0;
+end;
+
+{ Реализация функций для работы со списком заказов }
+
+procedure InitOrderList(var List: TOrderList);
+begin
+  List.Head := nil;
+  List.Count := 0;
+end;
+
+function AddOrder(var List: TOrderList; const Data: TOrder): Boolean;
+var
+  NewNode: POrderNode;
+begin
+  Result := False;
+  
+  // Проверяем, не существует ли уже заказ с таким ID
+  if FindOrder(List, Data.ID) <> nil then
+    Exit;
+  
+  // Создаем новый узел
+  New(NewNode);
+  NewNode^.Data := Data;
+  NewNode^.Next := List.Head;
+  
+  // Добавляем в начало списка
+  List.Head := NewNode;
+  Inc(List.Count);
+  
+  Result := True;
+end;
+
+function RemoveOrder(var List: TOrderList; ID: Integer): Boolean;
+var
+  Current, Previous: POrderNode;
+begin
+  Result := False;
+  
+  if List.Head = nil then
+    Exit;
+  
+  // Если удаляемый элемент - первый в списке
+  if List.Head^.Data.ID = ID then
+  begin
+    Current := List.Head;
+    List.Head := List.Head^.Next;
+    Dispose(Current);
+    Dec(List.Count);
+    Result := True;
+    Exit;
+  end;
+  
+  // Ищем элемент в списке
+  Previous := List.Head;
+  Current := List.Head^.Next;
+  
+  while (Current <> nil) and (Current^.Data.ID <> ID) do
+  begin
+    Previous := Current;
+    Current := Current^.Next;
+  end;
+  
+  // Если элемент найден
+  if Current <> nil then
+  begin
+    Previous^.Next := Current^.Next;
+    Dispose(Current);
+    Dec(List.Count);
+    Result := True;
+  end;
+end;
+
+function FindOrder(const List: TOrderList; ID: Integer): POrderNode;
+var
+  Current: POrderNode;
+begin
+  Result := nil;
+  Current := List.Head;
+  
+  while Current <> nil do
+  begin
+    if Current^.Data.ID = ID then
+    begin
+      Result := Current;
+      Exit;
+    end;
+    Current := Current^.Next;
+  end;
+end;
+
+procedure ClearOrderList(var List: TOrderList);
+var
+  Current, Next: POrderNode;
+begin
+  Current := List.Head;
+  
+  while Current <> nil do
+  begin
+    Next := Current^.Next;
+    Dispose(Current);
+    Current := Next;
+  end;
+  
+  List.Head := nil;
+  List.Count := 0;
+end;
+
+end.
+======== FileOperations.pas ========
+unit FileOperations;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  SysUtils, DataTypes, DynamicLists;
+
+const
+  COMPONENTS_FILE = 'data/components.dat';
+  COMPONENT_TYPES_FILE = 'data/component_types.dat';
+  COMPATIBILITY_FILE = 'data/compatibility.dat';
+  ORDERS_FILE = 'data/orders.dat';
+
+{ Функции для работы с файлом типов комплектующих }
+function LoadComponentTypes(var List: TComponentTypeList; const FileName: string = COMPONENT_TYPES_FILE): Boolean;
+function SaveComponentTypes(const List: TComponentTypeList; const FileName: string = COMPONENT_TYPES_FILE): Boolean;
+
+{ Функции для работы с файлом комплектующих }
+function LoadComponents(var List: TComponentList; const FileName: string = COMPONENTS_FILE): Boolean;
+function SaveComponents(const List: TComponentList; const FileName: string = COMPONENTS_FILE): Boolean;
+
+{ Функции для работы с файлом совместимости }
+function LoadCompatibility(var List: TCompatibilityList; const FileName: string = COMPATIBILITY_FILE): Boolean;
+function SaveCompatibility(const List: TCompatibilityList; const FileName: string = COMPATIBILITY_FILE): Boolean;
+
+{ Функции для работы с файлом заказов }
+function LoadOrders(var List: TOrderList; const FileName: string = ORDERS_FILE): Boolean;
+function SaveOrders(const List: TOrderList; const FileName: string = ORDERS_FILE): Boolean;
+
+{ Функции для сохранения результатов специальных функций в текстовые файлы }
+function SavePCBuildOptionsToTextFile(const List: TPCBuildOptionList; 
+                                      const ComponentList: TComponentList;
+                                      const FileName: string = 'data/pc_build_options.txt'): Boolean;
+function SaveOrderToTextFile(const Order: TOrder; 
+                            const BuildOption: TPCBuildOption;
+                            const ComponentList: TComponentList;
+                            const FileName: string = ''): Boolean;
+
+implementation
+
+{ Реализация функций для работы с файлом типов комплектующих }
+
+function LoadComponentTypes(var List: TComponentTypeList; const FileName: string): Boolean;
+var
+  F: file of TComponentType;
+  Item: TComponentType;
+begin
+  Result := False;
+  
+  // Очищаем список перед загрузкой
+  ClearComponentTypeList(List);
+  
+  // Проверяем существование файла
+  if not FileExists(FileName) then
+    Exit;
+  
+  try
+    // Открываем файл для чтения
+    AssignFile(F, FileName);
+    Reset(F);
+    
+    // Читаем записи из файла и добавляем их в список
+    while not Eof(F) do
+    begin
+      Read(F, Item);
+      // Преобразуем фиксированную строку в обычную
+      Item.Name := FixedToString(Item.Name);
+      AddComponentType(List, Item);
+    end;
+    
+    // Закрываем файл
+    CloseFile(F);
+    Result := True;
+  except
+    // В случае ошибки закрываем файл и возвращаем False
+    if IOResult = 0 then
+      CloseFile(F);
+    Result := False;
+  end;
+end;
+
+function SaveComponentTypes(const List: TComponentTypeList; const FileName: string): Boolean;
+var
+  F: file of TComponentType;
+  Current: PComponentTypeNode;
+  TempData: TComponentType;
+begin
+  Result := False;
+  
+  try
+    // Открываем файл для записи
+    AssignFile(F, FileName);
+    Rewrite(F);
+    
+    // Проходим по списку и записываем каждый элемент в файл
+    Current := List.Head;
+    while Current <> nil do
+    begin
+      // Создаем временную копию с фиксированными строками
+      TempData.TypeCode := Current^.Data.TypeCode;
+      TempData.Name := StringToFixed(Current^.Data.Name);
+      
+      Write(F, TempData);
+      Current := Current^.Next;
+    end;
+    
+    // Закрываем файл
+    CloseFile(F);
+    Result := True;
+  except
+    // В случае ошибки закрываем файл и возвращаем False
+    if IOResult = 0 then
+      CloseFile(F);
+    Result := False;
+  end;
+end;
+
+{ Реализация функций для работы с файлом комплектующих }
+
+function LoadComponents(var List: TComponentList; const FileName: string): Boolean;
+var
+  F: file of TComponent;
+  Item: TComponent;
+begin
+  Result := False;
+  
+  // Очищаем список перед загрузкой
+  ClearComponentList(List);
+  
+  // Проверяем существование файла
+  if not FileExists(FileName) then
+    Exit;
+  
+  try
+    // Открываем файл для чтения
+    AssignFile(F, FileName);
+    Reset(F);
+    
+    // Читаем записи из файла и добавляем их в список
+    while not Eof(F) do
+    begin
+      Read(F, Item);
+      // Преобразуем фиксированные строки в обычные
+      Item.Manufacturer := FixedToString(Item.Manufacturer);
+      Item.Model := FixedToString(Item.Model);
+      Item.Parameters := FixedToString(Item.Parameters);
+      AddComponent(List, Item);
+    end;
+    
+    // Закрываем файл
+    CloseFile(F);
+    Result := True;
+  except
+    // В случае ошибки закрываем файл и возвращаем False
+    if IOResult = 0 then
+      CloseFile(F);
+    Result := False;
+  end;
+end;
+
+function SaveComponents(const List: TComponentList; const FileName: string): Boolean;
+var
+  F: file of TComponent;
+  Current: PComponentNode;
+  TempData: TComponent;
+begin
+  Result := False;
+  
+  try
+    // Открываем файл для записи
+    AssignFile(F, FileName);
+    Rewrite(F);
+    
+    // Проходим по списку и записываем каждый элемент в файл
+    Current := List.Head;
+    while Current <> nil do
+    begin
+      // Создаем временную копию с фиксированными строками
+      TempData.Code := Current^.Data.Code;
+      TempData.TypeCode := Current^.Data.TypeCode;
+      TempData.Manufacturer := StringToFixed(Current^.Data.Manufacturer);
+      TempData.Model := StringToFixed(Current^.Data.Model);
+      TempData.Parameters := StringToFixed(Current^.Data.Parameters);
+      TempData.Price := Current^.Data.Price;
+      TempData.InStock := Current^.Data.InStock;
+      
+      Write(F, TempData);
+      Current := Current^.Next;
+    end;
+    
+    // Закрываем файл
+    CloseFile(F);
+    Result := True;
+  except
+    // В случае ошибки закрываем файл и возвращаем False
+    if IOResult = 0 then
+      CloseFile(F);
+    Result := False;
+  end;
+end;
+
+{ Реализация функций для работы с файлом совместимости }
+
+function LoadCompatibility(var List: TCompatibilityList; const FileName: string): Boolean;
+var
+  F: file of TCompatibility;
+  Item: TCompatibility;
+begin
+  Result := False;
+  
+  // Очищаем список перед загрузкой
+  ClearCompatibilityList(List);
+  
+  // Проверяем существование файла
+  if not FileExists(FileName) then
+    Exit;
+  
+  try
+    // Открываем файл для чтения
+    AssignFile(F, FileName);
+    Reset(F);
+    
+    // Читаем записи из файла и добавляем их в список
+    while not Eof(F) do
+    begin
+      Read(F, Item);
+      AddCompatibility(List, Item);
+    end;
+    
+    // Закрываем файл
+    CloseFile(F);
+    Result := True;
+  except
+    // В случае ошибки закрываем файл и возвращаем False
+    if IOResult = 0 then
+      CloseFile(F);
+    Result := False;
+  end;
+end;
+
+function SaveCompatibility(const List: TCompatibilityList; const FileName: string): Boolean;
+var
+  F: file of TCompatibility;
+  Current: PCompatibilityNode;
+begin
+  Result := False;
+  
+  try
+    // Открываем файл для записи
+    AssignFile(F, FileName);
+    Rewrite(F);
+    
+    // Проходим по списку и записываем каждый элемент в файл
+    Current := List.Head;
+    while Current <> nil do
+    begin
+      Write(F, Current^.Data);
+      Current := Current^.Next;
+    end;
+    
+    // Закрываем файл
+    CloseFile(F);
+    Result := True;
+  except
+    // В случае ошибки закрываем файл и возвращаем False
+    if IOResult = 0 then
+      CloseFile(F);
+    Result := False;
+  end;
+end;
+
+{ Реализация функций для работы с файлом заказов }
+
+function LoadOrders(var List: TOrderList; const FileName: string): Boolean;
+var
+  F: file of TOrder;
+  Item: TOrder;
+begin
+  Result := False;
+  
+  // Очищаем список перед загрузкой
+  ClearOrderList(List);
+  
+  // Проверяем существование файла
+  if not FileExists(FileName) then
+    Exit;
+  
+  try
+    // Открываем файл для чтения
+    AssignFile(F, FileName);
+    Reset(F);
+    
+    // Читаем записи из файла и добавляем их в список
+    while not Eof(F) do
+    begin
+      Read(F, Item);
+      // Преобразуем фиксированные строки в обычные
+      Item.CustomerName := FixedToString(Item.CustomerName);
+      Item.CustomerPhone := FixedToString(Item.CustomerPhone);
+      AddOrder(List, Item);
+    end;
+    
+    // Закрываем файл
+    CloseFile(F);
+    Result := True;
+  except
+    // В случае ошибки закрываем файл и возвращаем False
+    if IOResult = 0 then
+      CloseFile(F);
+    Result := False;
+  end;
+end;
+
+function SaveOrders(const List: TOrderList; const FileName: string): Boolean;
+var
+  F: file of TOrder;
+  Current: POrderNode;
+  TempData: TOrder;
+begin
+  Result := False;
+  
+  try
+    // Открываем файл для записи
+    AssignFile(F, FileName);
+    Rewrite(F);
+    
+    // Проходим по списку и записываем каждый элемент в файл
+    Current := List.Head;
+    while Current <> nil do
+    begin
+      // Создаем временную копию с фиксированными строками
+      TempData.ID := Current^.Data.ID;
+      TempData.BuildOptionID := Current^.Data.BuildOptionID;
+      TempData.CustomerName := StringToFixed(Current^.Data.CustomerName);
+      TempData.CustomerPhone := StringToFixed(Current^.Data.CustomerPhone);
+      TempData.OrderDate := Current^.Data.OrderDate;
+      
+      Write(F, TempData);
+      Current := Current^.Next;
+    end;
+    
+    // Закрываем файл
+    CloseFile(F);
+    Result := True;
+  except
+    // В случае ошибки закрываем файл и возвращаем False
+    if IOResult = 0 then
+      CloseFile(F);
+    Result := False;
+  end;
+end;
+
+{ Реализация функций для сохранения результатов специальных функций в текстовые файлы }
+
+function SavePCBuildOptionsToTextFile(const List: TPCBuildOptionList; 
+                                     const ComponentList: TComponentList;
+                                     const FileName: string): Boolean;
+var
+  F: TextFile;
+  Current: PPCBuildOptionNode;
+  ComponentNode: PComponentNode;
+  i: Integer;
+  ComponentCode: Integer;
+begin
+  Result := False;
+  
+  try
+    // Открываем текстовый файл для записи
+    AssignFile(F, FileName);
+    Rewrite(F);
+    
+    // Записываем заголовок
+    WriteLn(F, 'Варианты комплектации ПК');
+    WriteLn(F, '════════════════════════');
+    WriteLn(F);
+    
+    // Проходим по списку вариантов комплектации
+    Current := List.Head;
+    while Current <> nil do
+    begin
+      WriteLn(F, 'Вариант #', Current^.Data.ID);
+      WriteLn(F, 'Общая стоимость: ', Current^.Data.TotalPrice:0:2, ' руб.');
+      WriteLn(F, 'Комплектующие:');
+      
+      // Выводим информацию о каждой комплектующей в этом варианте
+      for i := 0 to Length(Current^.Data.ComponentCodes) - 1 do
+      begin
+        ComponentCode := Current^.Data.ComponentCodes[i];
+        ComponentNode := FindComponent(ComponentList, ComponentCode);
+        
+        if ComponentNode <> nil then
+        begin
+          WriteLn(F, '  • ', ComponentNode^.Data.Manufacturer, ' ', 
+                     ComponentNode^.Data.Model, ' (', 
+                     ComponentNode^.Data.Price:0:2, ' руб.)');
+        end;
+      end;
+      
+      WriteLn(F, '------------------------');
+      WriteLn(F);
+      
+      Current := Current^.Next;
+    end;
+    
+    // Закрываем файл
+    CloseFile(F);
+    Result := True;
+  except
+    // В случае ошибки закрываем файл и возвращаем False
+    if IOResult = 0 then
+      CloseFile(F);
+    Result := False;
+  end;
+end;
+
+function SaveOrderToTextFile(const Order: TOrder; 
+                           const BuildOption: TPCBuildOption;
+                           const ComponentList: TComponentList;
+                           const FileName: string): Boolean;
+var
+  F: TextFile;
+  ComponentNode: PComponentNode;
+  i: Integer;
+  ComponentCode: Integer;
+  ActualFileName: string;
+begin
+  Result := False;
+  
+  // Если имя файла не указано, генерируем его на основе ID заказа
+  if FileName = '' then
+    ActualFileName := 'data/order_confirmation_' + IntToStr(Order.ID) + '.txt'
+  else
+    ActualFileName := FileName;
+  
+  try
+    // Открываем текстовый файл для записи
+    AssignFile(F, ActualFileName);
+    Rewrite(F);
+    
+    // Записываем информацию о заказе
+    WriteLn(F, 'Подтверждение заказа #', Order.ID);
+    WriteLn(F, '═══════════════════════════════');
+    WriteLn(F);
+    WriteLn(F, 'Дата заказа: ', FormatDateTime('dd.mm.yyyy hh:nn', Order.OrderDate));
+    WriteLn(F, 'Заказчик: ', Order.CustomerName);
+    WriteLn(F, 'Телефон: ', Order.CustomerPhone);
+    WriteLn(F, 'Общая стоимость: ', BuildOption.TotalPrice:0:2, ' руб.');
+    WriteLn(F);
+    WriteLn(F, 'Комплектующие:');
+    
+    // Выводим информацию о каждой комплектующей в заказе
+    for i := 0 to Length(BuildOption.ComponentCodes) - 1 do
+    begin
+      ComponentCode := BuildOption.ComponentCodes[i];
+      ComponentNode := FindComponent(ComponentList, ComponentCode);
+      
+      if ComponentNode <> nil then
+      begin
+        WriteLn(F, '  • ', ComponentNode^.Data.Manufacturer, ' ', 
+                   ComponentNode^.Data.Model, ' (', 
+                   ComponentNode^.Data.Price:0:2, ' руб.)');
+      end;
+    end;
+    
+    WriteLn(F);
+    WriteLn(F, 'Спасибо за ваш заказ!');
+    
+    // Закрываем файл
+    CloseFile(F);
+    Result := True;
+  except
+    // В случае ошибки закрываем файл и возвращаем False
+    if IOResult = 0 then
+      CloseFile(F);
+    Result := False;
+  end;
+end;
+
+end.
+======== InputUtils.pas ========
+unit InputUtils;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  SysUtils;
+
+const
+  // Константы для специальных команд ввода
+  CMD_RETURN_TO_MENU = '/menu';
+  CMD_CANCEL = '/cancel';
+
+// Функции для безопасного чтения различных типов данных
+function SafeReadInteger(const Prompt: string; MinValue: Integer = Low(Integer); MaxValue: Integer = High(Integer); 
+                         const ErrorMsg: string = ''): Integer;
+function SafeReadFloat(const Prompt: string; MinValue: Real = -1E38; MaxValue: Real = 1E38; 
+                      const ErrorMsg: string = ''): Real;
+function SafeReadString(const Prompt: string; MinLength: Integer = 0; MaxLength: Integer = High(Integer); 
+                       const ErrorMsg: string = ''): string;
+function SafeReadBoolean(const Prompt: string; const ErrorMsg: string = ''): Boolean;
+
+// Функция для проверки, хочет ли пользователь вернуться в меню
+function IsReturnToMenuCommand(const Input: string): Boolean;
+
+// Функция для проверки, хочет ли пользователь отменить текущую операцию
+function IsCancelCommand(const Input: string): Boolean;
+
+// Функция для безопасного подтверждения операций
+function SafeReadConfirmation(const Prompt: string; const ErrorMsg: string = ''): Boolean;
+
+implementation
+
+function SafeReadInteger(const Prompt: string; MinValue: Integer; MaxValue: Integer; const ErrorMsg: string): Integer;
+var
+  InputStr: string;
+  Code: Integer;
+  DefaultErrorMsg: string;
+begin
+  DefaultErrorMsg := Format('Пожалуйста, введите целое число от %d до %d или "%s" для возврата в меню', 
+                           [MinValue, MaxValue, CMD_RETURN_TO_MENU]);
+  
+  if ErrorMsg <> '' then
+    DefaultErrorMsg := ErrorMsg;
+  
+  repeat
+    Write(Prompt);
+    ReadLn(InputStr);
+    
+    // Проверка на команду возврата в меню
+    if IsReturnToMenuCommand(InputStr) then
+    begin
+      Result := MinValue - 1; // Специальное значение для индикации возврата в меню
+      Exit;
+    end;
+    
+    // Проверка на команду отмены
+    if IsCancelCommand(InputStr) then
+    begin
+      Result := MinValue - 2; // Специальное значение для индикации отмены
+      Exit;
+    end;
+    
+    // Попытка преобразовать строку в целое число
+    Val(InputStr, Result, Code);
+    
+    if (Code <> 0) or (Result < MinValue) or (Result > MaxValue) then
+    begin
+      WriteLn(DefaultErrorMsg);
+      Code := 1; // Установка кода ошибки для повторного запроса
+    end;
+  until Code = 0;
+end;
+
+function SafeReadFloat(const Prompt: string; MinValue: Real; MaxValue: Real; const ErrorMsg: string): Real;
+var
+  InputStr: string;
+  Code: Integer;
+  DefaultErrorMsg: string;
+begin
+  DefaultErrorMsg := Format('Пожалуйста, введите число от %f до %f или "%s" для возврата в меню', 
+                           [MinValue, MaxValue, CMD_RETURN_TO_MENU]);
+  
+  if ErrorMsg <> '' then
+    DefaultErrorMsg := ErrorMsg;
+  
+  repeat
+    Write(Prompt);
+    ReadLn(InputStr);
+    
+    // Проверка на команду возврата в меню
+    if IsReturnToMenuCommand(InputStr) then
+    begin
+      Result := MinValue - 1; // Специальное значение для индикации возврата в меню
+      Exit;
+    end;
+    
+    // Проверка на команду отмены
+    if IsCancelCommand(InputStr) then
+    begin
+      Result := MinValue - 2; // Специальное значение для индикации отмены
+      Exit;
+    end;
+    
+    // Попытка преобразовать строку в число с плавающей точкой
+    Val(InputStr, Result, Code);
+    
+    if (Code <> 0) or (Result < MinValue) or (Result > MaxValue) then
+    begin
+      WriteLn(DefaultErrorMsg);
+      Code := 1; // Установка кода ошибки для повторного запроса
+    end;
+  until Code = 0;
+end;
+
+function SafeReadString(const Prompt: string; MinLength: Integer; MaxLength: Integer; const ErrorMsg: string): string;
+var
+  InputStr: string;
+  DefaultErrorMsg: string;
+begin
+  DefaultErrorMsg := Format('Пожалуйста, введите строку длиной от %d до %d символов или "%s" для возврата в меню', 
+                           [MinLength, MaxLength, CMD_RETURN_TO_MENU]);
+  
+  if ErrorMsg <> '' then
+    DefaultErrorMsg := ErrorMsg;
+  
+  repeat
+    Write(Prompt);
+    ReadLn(InputStr);
+    
+    // Проверка на команду возврата в меню
+    if IsReturnToMenuCommand(InputStr) then
+    begin
+      Result := CMD_RETURN_TO_MENU;
+      Exit;
+    end;
+    
+    // Проверка на команду отмены
+    if IsCancelCommand(InputStr) then
+    begin
+      Result := CMD_CANCEL;
+      Exit;
+    end;
+    
+    // Проверка длины строки
+    if (Length(InputStr) < MinLength) or (Length(InputStr) > MaxLength) then
+    begin
+      WriteLn(DefaultErrorMsg);
+      Continue;
+    end;
+    
+    Result := InputStr;
+    Break;
+  until False;
+end;
+
+function SafeReadBoolean(const Prompt: string; const ErrorMsg: string): Boolean;
+var
+  InputStr: string;
+  DefaultErrorMsg: string;
+begin
+  DefaultErrorMsg := Format('Пожалуйста, введите "да", "нет" или "%s" для возврата в меню', [CMD_RETURN_TO_MENU]);
+  
+  if ErrorMsg <> '' then
+    DefaultErrorMsg := ErrorMsg;
+  
+  repeat
+    Write(Prompt);
+    ReadLn(InputStr);
+    
+    // Проверка на команду возврата в меню
+    if IsReturnToMenuCommand(InputStr) then
+    begin
+      Result := False; // Специальное значение для индикации возврата в меню
+      Exit;
+    end;
+    
+    // Проверка на команду отмены
+    if IsCancelCommand(InputStr) then
+    begin
+      Result := False; // Специальное значение для индикации отмены
+      Exit;
+    end;
+    
+    // Проверка на "да"
+    if (InputStr = 'да') or (InputStr = 'Да') or (InputStr = 'ДА') or 
+       (InputStr = 'y') or (InputStr = 'Y') or (InputStr = 'yes') or (InputStr = 'Yes') then
+    begin
+      Result := True;
+      Exit;
+    end;
+    
+    // Проверка на "нет"
+    if (InputStr = 'нет') or (InputStr = 'Нет') or (InputStr = 'НЕТ') or 
+       (InputStr = 'n') or (InputStr = 'N') or (InputStr = 'no') or (InputStr = 'No') then
+    begin
+      Result := False;
+      Exit;
+    end;
+    
+    WriteLn(DefaultErrorMsg);
+  until False;
+end;
+
+function IsReturnToMenuCommand(const Input: string): Boolean;
+begin
+  Result := (Input = CMD_RETURN_TO_MENU);
+end;
+
+function IsCancelCommand(const Input: string): Boolean;
+begin
+  Result := (Input = CMD_CANCEL);
+end;
+
+function SafeReadConfirmation(const Prompt: string; const ErrorMsg: string = ''): Boolean;
+var
+  InputStr: string;
+  DefaultErrorMsg: string;
+begin
+  DefaultErrorMsg := Format('Пожалуйста, введите "да", "нет" или "%s" для возврата в меню', [CMD_RETURN_TO_MENU]);
+  
+  if ErrorMsg <> '' then
+    DefaultErrorMsg := ErrorMsg;
+  
+  repeat
+    Write(Prompt);
+    ReadLn(InputStr);
+    
+    // Проверка на команду возврата в меню
+    if IsReturnToMenuCommand(InputStr) then
+    begin
+      Result := False; // Специальное значение для индикации возврата в меню
+      Exit;
+    end;
+    
+    // Проверка на команду отмены
+    if IsCancelCommand(InputStr) then
+    begin
+      Result := False; // Специальное значение для индикации отмены
+      Exit;
+    end;
+    
+    // Проверка на "да"
+    if (InputStr = 'да') or (InputStr = 'Да') or (InputStr = 'ДА') or 
+       (InputStr = 'y') or (InputStr = 'Y') or (InputStr = 'yes') or (InputStr = 'Yes') then
+    begin
+      Result := True;
+      Exit;
+    end;
+    
+    // Проверка на "нет"
+    if (InputStr = 'нет') or (InputStr = 'Нет') or (InputStr = 'НЕТ') or 
+       (InputStr = 'n') or (InputStr = 'N') or (InputStr = 'no') or (InputStr = 'No') then
+    begin
+      Result := False;
+      Exit;
+    end;
+    
+    WriteLn(DefaultErrorMsg);
+  until False;
+end;
+
+end.
+======== MainProgram.pas ========
+unit MainProgram;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  SysUtils,
+  DataTypes,
+  DynamicLists,
+  UI,
+  InputUtils,
+  MenuHandlers,
+  DataSorting,
+  DataSearch;
+
+// Процедуры для обработки различных пунктов меню
+procedure HandleSortData(var ComponentTypesList: TComponentTypeList;
+                         var ComponentsList: TComponentList;
+                         var OrdersList: TOrderList);
+
+procedure HandleSearchData(const ComponentsList: TComponentList;
+                           const ComponentTypesList: TComponentTypeList);
+
+// Процедура для инициализации всех списков
+procedure InitAllLists(var ComponentTypesList: TComponentTypeList;
+                       var ComponentsList: TComponentList;
+                       var CompatibilityList: TCompatibilityList;
+                       var PCBuildOptionsList: TPCBuildOptionList;
+                       var OrdersList: TOrderList);
+
+implementation
+
+// Процедура для инициализации списков
+procedure InitAllLists(var ComponentTypesList: TComponentTypeList;
+                       var ComponentsList: TComponentList;
+                       var CompatibilityList: TCompatibilityList;
+                       var PCBuildOptionsList: TPCBuildOptionList;
+                       var OrdersList: TOrderList);
+begin
+  InitComponentTypeList(ComponentTypesList);
+  InitComponentList(ComponentsList);
+  InitCompatibilityList(CompatibilityList);
+  InitPCBuildOptionList(PCBuildOptionsList);
+  InitOrderList(OrdersList);
+end;
+
+// Процедура для сортировки данных
+procedure HandleSortData(var ComponentTypesList: TComponentTypeList;
+                         var ComponentsList: TComponentList;
+                         var OrdersList: TOrderList);
+var
+  SortChoice: Integer;
+begin
+  WriteLn('=== СОРТИРОВКА ДАННЫХ ===');
+  WriteLn('Выберите тип данных для сортировки:');
+  WriteLn('1. Типы комплектующих (по коду)');
+  WriteLn('2. Комплектующие (по цене)');
+  WriteLn('3. Комплектующие (по коду)');
+  WriteLn('4. Комплектующие (по производителю)');
+  WriteLn('5. Заказы (по дате)');
+  WriteLn('========================');
+  
+  SortChoice := SafeReadInteger('Выберите пункт (1-5): ', 1, 5, 'Ошибка: Выберите пункт от 1 до 5.');
+  
+  case SortChoice of
+    1: SortComponentTypesByCode(ComponentTypesList);
+    2: SortComponentsByPrice(ComponentsList);
+    3: SortComponentsByCode(ComponentsList);
+    4: SortComponentsByManufacturer(ComponentsList);
+    5: SortOrdersByDate(OrdersList);
+  end;
+  
+  WriteLn('Данные отсортированы.');
+  PressEnterToContinue;
+end;
+
+// Процедура для поиска данных с фильтрами
+procedure HandleSearchData(const ComponentsList: TComponentList;
+                           const ComponentTypesList: TComponentTypeList);
+var
+  SearchChoice: Integer;
+  SearchResults: TComponentList;
+  FilterMinPrice, FilterMaxPrice: Real;
+  FilterManufacturer, FilterModel: string;
+  FilterTypeCode: Integer;
+  FilterMinInStock: Integer;
+begin
+  WriteLn('=== ПОИСК ДАННЫХ С ФИЛЬТРАМИ ===');
+  WriteLn('Выберите тип поиска:');
+  WriteLn('1. Комплектующие по диапазону цен');
+  WriteLn('2. Комплектующие по производителю');
+  WriteLn('3. Комплектующие по типу');
+  WriteLn('4. Комплектующие по модели');
+  WriteLn('5. Комплектующие с минимальным количеством в наличии');
+  WriteLn('===============================');
+  
+  SearchChoice := SafeReadInteger('Выберите пункт (1-5): ', 1, 5, 'Ошибка: Выберите пункт от 1 до 5.');
+  
+  InitComponentList(SearchResults);
+  
+  case SearchChoice of
+    1: begin
+         FilterMinPrice := SafeReadFloat('Введите минимальную цену: ', 0, 1E10);
+         FilterMaxPrice := SafeReadFloat('Введите максимальную цену: ', FilterMinPrice, 1E10);
+         SearchComponentsByPriceRange(ComponentsList, FilterMinPrice, FilterMaxPrice, SearchResults);
+       end;
+    2: begin
+         FilterManufacturer := SafeReadString('Введите производителя: ', 1, 50);
+         SearchComponentsByManufacturer(ComponentsList, FilterManufacturer, SearchResults);
+       end;
+    3: begin
+         FilterTypeCode := SafeReadInteger('Введите код типа комплектующей: ', 1, High(Integer));
+         SearchComponentsByType(ComponentsList, FilterTypeCode, SearchResults);
+       end;
+    4: begin
+         FilterModel := SafeReadString('Введите модель: ', 1, 50);
+         SearchComponentsByModel(ComponentsList, FilterModel, SearchResults);
+       end;
+    5: begin
+         FilterMinInStock := SafeReadInteger('Введите минимальное количество в наличии: ', 0, High(Integer));
+         SearchComponentsByMinStock(ComponentsList, FilterMinInStock, SearchResults);
+       end;
+  end;
+  
+  WriteLn;
+  WriteLn('=== РЕЗУЛЬТАТЫ ПОИСКА ===');
+  if SearchResults.Count > 0 then
+  begin
+    WriteLn('Найдено записей: ', SearchResults.Count);
+    DisplayComponents(SearchResults, ComponentTypesList);
+  end
+  else
+  begin
+    WriteLn('По заданным критериям ничего не найдено.');
+    PressEnterToContinue;
+  end;
+  
+  ClearComponentList(SearchResults);
+end;
+
+end. 
+======== MenuHandlers.pas ========
+unit MenuHandlers;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  SysUtils,
+  DataTypes,
+  DynamicLists,
+  FileOperations,
+  UI,
+  SpecialFunctions,
+  InputUtils;
+
+// Процедуры для обработки пунктов меню
+procedure LoadAllData(var ComponentTypesList: TComponentTypeList;
+                      var ComponentsList: TComponentList;
+                      var CompatibilityList: TCompatibilityList;
+                      var OrdersList: TOrderList);
+
+procedure SaveAllData(const ComponentTypesList: TComponentTypeList;
+                      const ComponentsList: TComponentList;
+                      const CompatibilityList: TCompatibilityList;
+                      const OrdersList: TOrderList);
+
+procedure ViewList(const ComponentTypesList: TComponentTypeList;
+                   const ComponentsList: TComponentList;
+                   const CompatibilityList: TCompatibilityList;
+                   const OrdersList: TOrderList;
+                   const PCBuildOptionsList: TPCBuildOptionList);
+
+procedure AddData(var ComponentTypesList: TComponentTypeList;
+                  var ComponentsList: TComponentList;
+                  var CompatibilityList: TCompatibilityList);
+
+procedure RemoveData(var ComponentTypesList: TComponentTypeList;
+                     var ComponentsList: TComponentList;
+                     var CompatibilityList: TCompatibilityList);
+
+procedure EditData(var ComponentTypesList: TComponentTypeList;
+                   var ComponentsList: TComponentList;
+                   var CompatibilityList: TCompatibilityList);
+
+procedure HandleSpecialFunctions(const ComponentTypesList: TComponentTypeList;
+                                 const ComponentsList: TComponentList;
+                                 const CompatibilityList: TCompatibilityList;
+                                 var PCBuildOptionsList: TPCBuildOptionList;
+                                 var OrdersList: TOrderList);
+
+implementation
+
+// Процедуры для инициализации списков
+procedure InitAllLists(var ComponentTypesList: TComponentTypeList;
+                       var ComponentsList: TComponentList;
+                       var CompatibilityList: TCompatibilityList;
+                       var PCBuildOptionsList: TPCBuildOptionList;
+                       var OrdersList: TOrderList);
+begin
+  InitComponentTypeList(ComponentTypesList);
+  InitComponentList(ComponentsList);
+  InitCompatibilityList(CompatibilityList);
+  InitPCBuildOptionList(PCBuildOptionsList);
+  InitOrderList(OrdersList);
+end;
+
+// Процедура для загрузки данных из файлов
+procedure LoadAllData(var ComponentTypesList: TComponentTypeList;
+                      var ComponentsList: TComponentList;
+                      var CompatibilityList: TCompatibilityList;
+                      var OrdersList: TOrderList);
+var
+  Confirmation: string;
+  PCBuildOptionsList: TPCBuildOptionList;
+begin
+  // Запрос подтверждения у пользователя
+  WriteLn('ВНИМАНИЕ: Вы собираетесь загрузить данные из файлов.');
+  WriteLn('Это действие заменит все текущие данные в памяти.');
+  Write('Вы уверены, что хотите продолжить? (да/нет): ');
+  ReadLn(Confirmation);
+  
+  if (Confirmation <> 'да') and (Confirmation <> 'Да') and (Confirmation <> 'ДА') then
+  begin
+    WriteLn('Загрузка данных отменена.');
+    PressEnterToContinue;
+    Exit;
+  end;
+  
+  // Инициализация списков
+  InitAllLists(ComponentTypesList, ComponentsList, CompatibilityList, PCBuildOptionsList, OrdersList);
+  
+  // Загрузка данных из файлов
+  if not LoadComponentTypes(ComponentTypesList) then
+    WriteLn('Файл типов комплектующих не найден или поврежден. Создан пустой список.');
+  
+  if not LoadComponents(ComponentsList) then
+    WriteLn('Файл комплектующих не найден или поврежден. Создан пустой список.');
+  
+  if not LoadCompatibility(CompatibilityList) then
+    WriteLn('Файл совместимости не найден или поврежден. Создан пустой список.');
+  
+  if not LoadOrders(OrdersList) then
+    WriteLn('Файл заказов не найден или поврежден. Создан пустой список.');
+  
+  WriteLn('Данные загружены.');
+  PressEnterToContinue;
+end;
+
+// Процедура для сохранения данных в файлы
+procedure SaveAllData(const ComponentTypesList: TComponentTypeList;
+                      const ComponentsList: TComponentList;
+                      const CompatibilityList: TCompatibilityList;
+                      const OrdersList: TOrderList);
+begin
+  if not SaveComponentTypes(ComponentTypesList) then
+    WriteLn('Ошибка при сохранении типов комплектующих.');
+  
+  if not SaveComponents(ComponentsList) then
+    WriteLn('Ошибка при сохранении комплектующих.');
+  
+  if not SaveCompatibility(CompatibilityList) then
+    WriteLn('Ошибка при сохранении данных о совместимости.');
+  
+  if not SaveOrders(OrdersList) then
+    WriteLn('Ошибка при сохранении заказов.');
+  
+  WriteLn('Данные сохранены.');
+end;
+
+// Процедура для обработки пункта меню "Просмотр всего списка"
+procedure ViewList(const ComponentTypesList: TComponentTypeList;
+                   const ComponentsList: TComponentList;
+                   const CompatibilityList: TCompatibilityList;
+                   const OrdersList: TOrderList;
+                   const PCBuildOptionsList: TPCBuildOptionList);
+var
+  SubmenuChoice: Integer;
+begin
+  DisplayListSubmenu;
+  SubmenuChoice := GetListSubmenuChoice;
+  
+  case SubmenuChoice of
+    SUBMENU_COMPONENT_TYPES:
+      DisplayComponentTypes(ComponentTypesList);
+    
+    SUBMENU_COMPONENTS:
+      DisplayComponents(ComponentsList, ComponentTypesList);
+    
+    SUBMENU_COMPATIBILITY:
+      DisplayCompatibility(CompatibilityList, ComponentsList);
+    
+    SUBMENU_ORDERS:
+      DisplayOrders(OrdersList, PCBuildOptionsList);
+  end;
+end;
+
+// Процедура для обработки пункта меню "Добавление данных в список"
+procedure AddData(var ComponentTypesList: TComponentTypeList;
+                  var ComponentsList: TComponentList;
+                  var CompatibilityList: TCompatibilityList);
+var
+  SubmenuChoice: Integer;
+  NewComponentType: TComponentType;
+  NewComponent: TComponent;
+  NewCompatibility: TCompatibility;
+  Confirmation: string;
+begin
+  DisplayAddDataSubmenu;
+  SubmenuChoice := GetAddDataSubmenuChoice;
+  
+  // Проверка на отмену операции
+  if SubmenuChoice < SUBMENU_COMPONENT_TYPES then
+  begin
+    WriteLn('Операция добавления отменена.');
+    PressEnterToContinue;
+    Exit;
+  end;
+  
+  WriteLn('Для прерывания операции в любой момент введите "/cancel" или "/menu"');
+  WriteLn;
+  
+  case SubmenuChoice of
+    SUBMENU_COMPONENT_TYPES:
+      begin
+        WriteLn('=== ДОБАВЛЕНИЕ ТИПА КОМПЛЕКТУЮЩЕЙ ===');
+        if InputComponentType(NewComponentType, ComponentTypesList) then
+        begin
+          if AddComponentType(ComponentTypesList, NewComponentType) then
+            WriteLn('Тип комплектующей успешно добавлен.')
+          else
+            WriteLn('Ошибка: Тип с таким кодом уже существует.');
+        end
+        else
+          WriteLn('Добавление типа комплектующей отменено.');
+      end;
+    
+    SUBMENU_COMPONENTS:
+      begin
+        WriteLn('=== ДОБАВЛЕНИЕ КОМПЛЕКТУЮЩЕЙ ===');
+        if ComponentTypesList.Count = 0 then
+        begin
+          WriteLn('Ошибка: Сначала необходимо добавить типы комплектующих.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        WriteLn('Доступные типы комплектующих:');
+        DisplayComponentTypes(ComponentTypesList);
+        
+        if InputComponent(NewComponent, ComponentTypesList, ComponentsList) then
+        begin
+          if AddComponent(ComponentsList, NewComponent) then
+            WriteLn('Комплектующая успешно добавлена.')
+          else
+            WriteLn('Ошибка: Комплектующая с таким кодом уже существует.');
+        end
+        else
+          WriteLn('Добавление комплектующей отменено.');
+      end;
+    
+    SUBMENU_COMPATIBILITY:
+      begin
+        WriteLn('=== ДОБАВЛЕНИЕ ЗАПИСИ О СОВМЕСТИМОСТИ ===');
+        if ComponentsList.Count < 2 then
+        begin
+          WriteLn('Ошибка: Для создания записи о совместимости необходимо минимум 2 комплектующих.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        WriteLn('Доступные комплектующие:');
+        DisplayComponents(ComponentsList, ComponentTypesList);
+        
+        if InputCompatibility(NewCompatibility, ComponentsList) then
+        begin
+          if NewCompatibility.ComponentCode1 = NewCompatibility.ComponentCode2 then
+          begin
+            WriteLn('Ошибка: Нельзя создать запись о совместимости комплектующей с самой собой.');
+          end
+          else if AddCompatibility(CompatibilityList, NewCompatibility) then
+            WriteLn('Запись о совместимости успешно добавлена.')
+          else
+            WriteLn('Ошибка: Такая запись о совместимости уже существует.');
+        end
+        else
+          WriteLn('Добавление записи о совместимости отменено.');
+      end;
+  end;
+  
+  PressEnterToContinue;
+end;
+
+// Процедура для обработки пункта меню "Удаление данных из списка"
+procedure RemoveData(var ComponentTypesList: TComponentTypeList;
+                     var ComponentsList: TComponentList;
+                     var CompatibilityList: TCompatibilityList);
+var
+  SubmenuChoice: Integer;
+  Code, Code1, Code2: Integer;
+  ComponentTypeNode: PComponentTypeNode;
+  ComponentNode: PComponentNode;
+  HasDependentComponents, HasDependentCompatibility: Boolean;
+  Current: PComponentNode;
+  CompatCurrent: PCompatibilityNode;
+  Confirmation: string;
+begin
+  DisplayListSubmenu;
+  SubmenuChoice := GetListSubmenuChoice;
+  
+  // Проверка на отмену операции
+  if SubmenuChoice < SUBMENU_COMPONENT_TYPES then
+  begin
+    WriteLn('Операция удаления отменена.');
+    PressEnterToContinue;
+    Exit;
+  end;
+  
+  WriteLn('Для прерывания операции в любой момент введите "/cancel" или "/menu"');
+  WriteLn;
+  
+  case SubmenuChoice of
+    SUBMENU_COMPONENT_TYPES:
+      begin
+        WriteLn('=== УДАЛЕНИЕ ТИПА КОМПЛЕКТУЮЩЕЙ ===');
+        if ComponentTypesList.Count = 0 then
+        begin
+          WriteLn('Список типов комплектующих пуст.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        WriteLn('Доступные типы комплектующих:');
+        DisplayComponentTypes(ComponentTypesList);
+        
+        Code := SafeReadInteger('Введите код типа комплектующей для удаления: ', 1);
+        if Code < 1 then
+        begin
+          WriteLn('Удаление типа комплектующей отменено.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        ComponentTypeNode := FindComponentType(ComponentTypesList, Code);
+        if ComponentTypeNode = nil then
+        begin
+          WriteLn('Ошибка: Тип с таким кодом не найден.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        // Проверяем, есть ли комплектующие данного типа
+        HasDependentComponents := False;
+        Current := ComponentsList.Head;
+        while Current <> nil do
+        begin
+          if Current^.Data.TypeCode = Code then
+          begin
+            HasDependentComponents := True;
+            Break;
+          end;
+          Current := Current^.Next;
+        end;
+        
+        if HasDependentComponents then
+        begin
+          WriteLn('ВНИМАНИЕ: Существуют комплектующие данного типа.');
+          WriteLn('Удаление типа приведет к проблемам с данными.');
+          Confirmation := SafeReadString('Вы действительно хотите удалить этот тип? (да/нет): ', 1, 10);
+          
+          if IsReturnToMenuCommand(Confirmation) or IsCancelCommand(Confirmation) then
+          begin
+            WriteLn('Удаление типа комплектующей отменено.');
+            PressEnterToContinue;
+            Exit;
+          end;
+          
+          if not ((Confirmation = 'да') or (Confirmation = 'Да') or (Confirmation = 'ДА')) then
+          begin
+            WriteLn('Удаление типа комплектующей отменено.');
+            PressEnterToContinue;
+            Exit;
+          end;
+        end;
+        
+        if RemoveComponentType(ComponentTypesList, Code) then
+          WriteLn('Тип комплектующей успешно удален.')
+        else
+          WriteLn('Ошибка при удалении типа комплектующей.');
+      end;
+    
+    SUBMENU_COMPONENTS:
+      begin
+        WriteLn('=== УДАЛЕНИЕ КОМПЛЕКТУЮЩЕЙ ===');
+        if ComponentsList.Count = 0 then
+        begin
+          WriteLn('Список комплектующих пуст.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        WriteLn('Доступные комплектующие:');
+        DisplayComponents(ComponentsList, ComponentTypesList);
+        
+        Code := SafeReadInteger('Введите код комплектующей для удаления: ', 1);
+        if Code < 1 then
+        begin
+          WriteLn('Удаление комплектующей отменено.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        ComponentNode := FindComponent(ComponentsList, Code);
+        if ComponentNode = nil then
+        begin
+          WriteLn('Ошибка: Комплектующая с таким кодом не найдена.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        // Проверяем, есть ли записи о совместимости с данной комплектующей
+        HasDependentCompatibility := False;
+        CompatCurrent := CompatibilityList.Head;
+        while CompatCurrent <> nil do
+        begin
+          if (CompatCurrent^.Data.ComponentCode1 = Code) or 
+             (CompatCurrent^.Data.ComponentCode2 = Code) then
+          begin
+            HasDependentCompatibility := True;
+            Break;
+          end;
+          CompatCurrent := CompatCurrent^.Next;
+        end;
+        
+        if HasDependentCompatibility then
+        begin
+          WriteLn('ВНИМАНИЕ: Существуют записи о совместимости с данной комплектующей.');
+          WriteLn('Удаление комплектующей приведет к потере этих записей.');
+          Confirmation := SafeReadString('Вы действительно хотите удалить эту комплектующую? (да/нет): ', 1, 10);
+          
+          if IsReturnToMenuCommand(Confirmation) or IsCancelCommand(Confirmation) then
+          begin
+            WriteLn('Удаление комплектующей отменено.');
+            PressEnterToContinue;
+            Exit;
+          end;
+          
+          if not ((Confirmation = 'да') or (Confirmation = 'Да') or (Confirmation = 'ДА')) then
+          begin
+            WriteLn('Удаление комплектующей отменено.');
+            PressEnterToContinue;
+            Exit;
+          end;
+          
+          // Удаляем связанные записи о совместимости
+          CompatCurrent := CompatibilityList.Head;
+          while CompatCurrent <> nil do
+          begin
+            if (CompatCurrent^.Data.ComponentCode1 = Code) or 
+               (CompatCurrent^.Data.ComponentCode2 = Code) then
+            begin
+              RemoveCompatibility(CompatibilityList, 
+                                CompatCurrent^.Data.ComponentCode1, 
+                                CompatCurrent^.Data.ComponentCode2);
+              // Начинаем поиск сначала, так как список изменился
+              CompatCurrent := CompatibilityList.Head;
+            end
+            else
+              CompatCurrent := CompatCurrent^.Next;
+          end;
+          WriteLn('Связанные записи о совместимости удалены.');
+        end;
+        
+        if RemoveComponent(ComponentsList, Code) then
+          WriteLn('Комплектующая успешно удалена.')
+        else
+          WriteLn('Ошибка при удалении комплектующей.');
+      end;
+    
+    SUBMENU_COMPATIBILITY:
+      begin
+        WriteLn('=== УДАЛЕНИЕ ЗАПИСИ О СОВМЕСТИМОСТИ ===');
+        if CompatibilityList.Count = 0 then
+        begin
+          WriteLn('Список записей о совместимости пуст.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        WriteLn('Доступные записи о совместимости:');
+        DisplayCompatibility(CompatibilityList, ComponentsList);
+        
+        Code1 := SafeReadInteger('Введите код первой комплектующей: ', 1);
+        if Code1 < 1 then
+        begin
+          WriteLn('Удаление записи о совместимости отменено.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        Code2 := SafeReadInteger('Введите код второй комплектующей: ', 1);
+        if Code2 < 1 then
+        begin
+          WriteLn('Удаление записи о совместимости отменено.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        if FindCompatibility(CompatibilityList, Code1, Code2) = nil then
+        begin
+          WriteLn('Ошибка: Запись о совместимости не найдена.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        if RemoveCompatibility(CompatibilityList, Code1, Code2) then
+          WriteLn('Запись о совместимости успешно удалена.')
+        else
+          WriteLn('Ошибка при удалении записи о совместимости.');
+      end;
+  end;
+  
+  PressEnterToContinue;
+end;
+
+// Процедура для обработки пункта меню "Редактирование данных"
+procedure EditData(var ComponentTypesList: TComponentTypeList;
+                   var ComponentsList: TComponentList;
+                   var CompatibilityList: TCompatibilityList);
+var
+  SubmenuChoice: Integer;
+  Code, i, TypeCode: Integer;
+  ComponentTypeNode: PComponentTypeNode;
+  ComponentNode: PComponentNode;
+  CompatibilityNode: PCompatibilityNode;
+  TempString: string;
+  TempPrice: Real;
+  TempStock: Integer;
+  ComponentCode1, ComponentCode2: Integer;
+  Component1, Component2: PComponentNode;
+begin
+  DisplayListSubmenu;
+  SubmenuChoice := GetListSubmenuChoice;
+  
+  // Проверка на отмену операции
+  if SubmenuChoice < SUBMENU_COMPONENT_TYPES then
+  begin
+    WriteLn('Операция редактирования отменена.');
+    PressEnterToContinue;
+    Exit;
+  end;
+  
+  WriteLn('Для прерывания операции в любой момент введите "/cancel" или "/menu"');
+  WriteLn;
+  
+  case SubmenuChoice of
+    SUBMENU_COMPONENT_TYPES:
+      begin
+        WriteLn('=== РЕДАКТИРОВАНИЕ ТИПА КОМПЛЕКТУЮЩЕЙ ===');
+        if ComponentTypesList.Count = 0 then
+        begin
+          WriteLn('Список типов комплектующих пуст.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        WriteLn('Доступные типы комплектующих:');
+        DisplayComponentTypes(ComponentTypesList);
+        
+        Code := SafeReadInteger('Введите код типа комплектующей для редактирования: ', 1);
+        if Code < 1 then
+        begin
+          WriteLn('Редактирование типа комплектующей отменено.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        ComponentTypeNode := FindComponentType(ComponentTypesList, Code);
+        if ComponentTypeNode = nil then
+        begin
+          WriteLn('Ошибка: Тип с таким кодом не найден.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        WriteLn('Текущие данные:');
+        WriteLn('Код типа: ', ComponentTypeNode^.Data.TypeCode);
+        WriteLn('Название: ', ComponentTypeNode^.Data.Name);
+        WriteLn;
+        
+        WriteLn('Введите новые данные:');
+        TempString := SafeReadString('Название типа комплектующей: ', 1, MAX_STRING_LENGTH);
+        
+        if IsReturnToMenuCommand(TempString) or IsCancelCommand(TempString) then
+        begin
+          WriteLn('Редактирование типа комплектующей отменено.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        ComponentTypeNode^.Data.Name := StringToFixed(TempString);
+        WriteLn('Тип комплектующей успешно отредактирован.');
+      end;
+    
+    SUBMENU_COMPONENTS:
+      begin
+        WriteLn('=== РЕДАКТИРОВАНИЕ КОМПЛЕКТУЮЩЕЙ ===');
+        if ComponentsList.Count = 0 then
+        begin
+          WriteLn('Список комплектующих пуст.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        WriteLn('Доступные комплектующие:');
+        DisplayComponents(ComponentsList, ComponentTypesList);
+        
+        Code := SafeReadInteger('Введите код комплектующей для редактирования: ', 1);
+        if Code < 1 then
+        begin
+          WriteLn('Редактирование комплектующей отменено.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        ComponentNode := FindComponent(ComponentsList, Code);
+        if ComponentNode = nil then
+        begin
+          WriteLn('Ошибка: Комплектующая с таким кодом не найдена.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        WriteLn('Текущие данные:');
+        WriteLn('Код: ', ComponentNode^.Data.Code);
+        WriteLn('Код типа: ', ComponentNode^.Data.TypeCode);
+        WriteLn('Производитель: ', ComponentNode^.Data.Manufacturer);
+        WriteLn('Модель: ', ComponentNode^.Data.Model);
+        WriteLn('Параметры: ', ComponentNode^.Data.Parameters);
+        WriteLn('Цена: ', ComponentNode^.Data.Price:0:2);
+        WriteLn('В наличии: ', ComponentNode^.Data.InStock);
+        WriteLn;
+        
+        WriteLn('Введите новые данные:');
+        WriteLn('Доступные типы комплектующих:');
+        DisplayComponentTypes(ComponentTypesList);
+        
+        repeat
+          TypeCode := SafeReadInteger('Код типа комплектующей: ', 1);
+          if TypeCode < 1 then
+          begin
+            WriteLn('Редактирование комплектующей отменено.');
+            PressEnterToContinue;
+            Exit;
+          end;
+          
+          if FindComponentType(ComponentTypesList, TypeCode) = nil then
+            WriteLn('Ошибка: Тип с кодом ', TypeCode, ' не найден. Пожалуйста, введите существующий код типа.');
+        until FindComponentType(ComponentTypesList, TypeCode) <> nil;
+        
+        ComponentNode^.Data.TypeCode := TypeCode;
+        
+        TempString := SafeReadString('Производитель: ', 1, MAX_STRING_LENGTH);
+        if IsReturnToMenuCommand(TempString) or IsCancelCommand(TempString) then
+        begin
+          WriteLn('Редактирование комплектующей отменено.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        ComponentNode^.Data.Manufacturer := StringToFixed(TempString);
+        
+        TempString := SafeReadString('Модель: ', 1, MAX_STRING_LENGTH);
+        if IsReturnToMenuCommand(TempString) or IsCancelCommand(TempString) then
+        begin
+          WriteLn('Редактирование комплектующей отменено.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        ComponentNode^.Data.Model := StringToFixed(TempString);
+        
+        TempString := SafeReadString('Параметры: ', 0, MAX_STRING_LENGTH);
+        if IsReturnToMenuCommand(TempString) or IsCancelCommand(TempString) then
+        begin
+          WriteLn('Редактирование комплектующей отменено.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        ComponentNode^.Data.Parameters := StringToFixed(TempString);
+        
+        TempPrice := SafeReadFloat('Цена: ', 0);
+        if TempPrice < 0 then
+        begin
+          WriteLn('Редактирование комплектующей отменено.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        ComponentNode^.Data.Price := TempPrice;
+        
+        TempStock := SafeReadInteger('Количество в наличии: ', 0);
+        if TempStock < 0 then
+        begin
+          WriteLn('Редактирование комплектующей отменено.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        ComponentNode^.Data.InStock := TempStock;
+        
+        WriteLn('Комплектующая успешно отредактирована.');
+      end;
+    
+    SUBMENU_COMPATIBILITY:
+      begin
+        WriteLn('=== РЕДАКТИРОВАНИЕ ЗАПИСИ О СОВМЕСТИМОСТИ ===');
+        if CompatibilityList.Count = 0 then
+        begin
+          WriteLn('Список записей о совместимости пуст.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        WriteLn('Доступные записи о совместимости:');
+        DisplayCompatibility(CompatibilityList, ComponentsList);
+        
+        Code := SafeReadInteger('Введите код первой комплектующей: ', 1);
+        if Code < 1 then
+        begin
+          WriteLn('Редактирование записи о совместимости отменено.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        i := SafeReadInteger('Введите код второй комплектующей: ', 1);
+        if i < 1 then
+        begin
+          WriteLn('Редактирование записи о совместимости отменено.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        CompatibilityNode := FindCompatibility(CompatibilityList, Code, i);
+        if CompatibilityNode = nil then
+        begin
+          WriteLn('Ошибка: Запись о совместимости не найдена.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        WriteLn('Текущие данные:');
+        WriteLn('Код первой комплектующей: ', CompatibilityNode^.Data.ComponentCode1);
+        WriteLn('Код второй комплектующей: ', CompatibilityNode^.Data.ComponentCode2);
+        WriteLn;
+        
+        WriteLn('Введите новые данные:');
+        WriteLn('Доступные комплектующие:');
+        DisplayComponents(ComponentsList, ComponentTypesList);
+        
+        repeat
+          ComponentCode1 := SafeReadInteger('Код первой комплектующей: ', 1);
+          if ComponentCode1 < 1 then
+          begin
+            WriteLn('Редактирование записи о совместимости отменено.');
+            PressEnterToContinue;
+            Exit;
+          end;
+          
+          Component1 := FindComponent(ComponentsList, ComponentCode1);
+          if Component1 = nil then
+            WriteLn('Ошибка: Комплектующая с кодом ', ComponentCode1, ' не найдена. Пожалуйста, введите существующий код.');
+        until Component1 <> nil;
+        
+        repeat
+          ComponentCode2 := SafeReadInteger('Код второй комплектующей: ', 1);
+          if ComponentCode2 < 1 then
+          begin
+            WriteLn('Редактирование записи о совместимости отменено.');
+            PressEnterToContinue;
+            Exit;
+          end;
+          
+          Component2 := FindComponent(ComponentsList, ComponentCode2);
+          if Component2 = nil then
+            WriteLn('Ошибка: Комплектующая с кодом ', ComponentCode2, ' не найдена. Пожалуйста, введите существующий код.');
+        until Component2 <> nil;
+        
+        if ComponentCode1 = ComponentCode2 then
+        begin
+          WriteLn('Ошибка: Нельзя создать запись о совместимости комплектующей с самой собой.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        CompatibilityNode^.Data.ComponentCode1 := ComponentCode1;
+        CompatibilityNode^.Data.ComponentCode2 := ComponentCode2;
+        
+        WriteLn('Запись о совместимости успешно отредактирована.');
+      end;
+  end;
+  
+  PressEnterToContinue;
+end;
+
+// Процедура для обработки пункта меню "Специальные функции"
+procedure HandleSpecialFunctions(const ComponentTypesList: TComponentTypeList;
+                                 const ComponentsList: TComponentList;
+                                 const CompatibilityList: TCompatibilityList;
+                                 var PCBuildOptionsList: TPCBuildOptionList;
+                                 var OrdersList: TOrderList);
+var
+  SubmenuChoice: Integer;
+  MinPrice, MaxPrice: Real;
+  CompatibleComponentsList: TComponentList;
+  ComponentCode, TypeCode: Integer;
+  i: Integer;
+  BuildOptionNode: PPCBuildOptionNode;
+begin
+  DisplaySpecialFunctionsSubmenu;
+  SubmenuChoice := GetSpecialFunctionsSubmenuChoice;
+  
+  // Проверка на отмену операции
+  if SubmenuChoice < SUBMENU_SF_BUILD_PC then
+  begin
+    WriteLn('Операция отменена.');
+    PressEnterToContinue;
+    Exit;
+  end;
+  
+  WriteLn('Для прерывания операции в любой момент введите "/cancel" или "/menu"');
+  WriteLn;
+  
+  case SubmenuChoice of
+    SUBMENU_SF_BUILD_PC:
+      begin
+        WriteLn('=== ПОДБОР ВАРИАНТОВ КОМПЛЕКТАЦИИ ПК ===');
+        
+        // Проверяем, есть ли необходимые данные
+        if ComponentsList.Count = 0 then
+        begin
+          WriteLn('Ошибка: Список комплектующих пуст. Сначала добавьте комплектующие.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        if CompatibilityList.Count = 0 then
+        begin
+          WriteLn('Ошибка: Список совместимости пуст. Сначала добавьте записи о совместимости.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        // Подбор вариантов комплектации ПК в заданном ценовом диапазоне
+        MinPrice := SafeReadFloat('Введите минимальную цену: ', 0);
+        if MinPrice < 0 then
+        begin
+          WriteLn('Подбор вариантов комплектации отменен.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        MaxPrice := SafeReadFloat('Введите максимальную цену: ', MinPrice);
+        if MaxPrice < 0 then
+        begin
+          WriteLn('Подбор вариантов комплектации отменен.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        if MaxPrice < MinPrice then
+        begin
+          WriteLn('Ошибка: Максимальная цена не может быть меньше минимальной.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        if FindPCBuildOptions(ComponentsList, CompatibilityList, ComponentTypesList,
+                            MinPrice, MaxPrice, PCBuildOptionsList) then
+        begin
+          WriteLn('Найдено ', PCBuildOptionsList.Count, ' вариантов комплектации ПК.');
+          DisplayPCBuildOptions(PCBuildOptionsList, ComponentsList);
+          
+          // Сохраняем результаты в текстовый файл
+          if SavePCBuildOptionsToTextFile(PCBuildOptionsList, ComponentsList, 'data/pc_build_options.txt') then
+            WriteLn('Результаты сохранены в файл data/pc_build_options.txt')
+          else
+            WriteLn('Ошибка при сохранении результатов в файл.');
+        end
+        else
+          WriteLn('Не найдено вариантов комплектации ПК в заданном ценовом диапазоне.');
+      end;
+    
+    SUBMENU_SF_CREATE_ORDER:
+      begin
+        WriteLn('=== ОФОРМЛЕНИЕ ЗАКАЗА ===');
+        
+        // Оформление заказа
+        if PCBuildOptionsList.Count = 0 then
+        begin
+          WriteLn('Сначала необходимо подобрать варианты комплектации ПК (пункт 1).');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        WriteLn('Доступные варианты комплектации:');
+        DisplayPCBuildOptions(PCBuildOptionsList, ComponentsList);
+        
+        i := SafeReadInteger('Введите ID варианта комплектации для заказа: ', 1);
+        if i < 1 then
+        begin
+          WriteLn('Оформление заказа отменено.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        BuildOptionNode := FindPCBuildOption(PCBuildOptionsList, i);
+        if BuildOptionNode = nil then
+        begin
+          WriteLn('Ошибка: Вариант комплектации с ID ', i, ' не найден.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        if CreateOrder(BuildOptionNode^.Data, ComponentsList, OrdersList) then
+          WriteLn('Заказ успешно оформлен.')
+        else
+          WriteLn('Ошибка при оформлении заказа.');
+      end;
+    
+    SUBMENU_SF_COMPATIBLE_COMPONENTS:
+      begin
+        WriteLn('=== ПОИСК СОВМЕСТИМЫХ КОМПЛЕКТУЮЩИХ ===');
+        
+        // Проверяем, есть ли необходимые данные
+        if ComponentsList.Count = 0 then
+        begin
+          WriteLn('Ошибка: Список комплектующих пуст.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        if CompatibilityList.Count = 0 then
+        begin
+          WriteLn('Ошибка: Список совместимости пуст.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        if ComponentTypesList.Count = 0 then
+        begin
+          WriteLn('Ошибка: Список типов комплектующих пуст.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        // Поиск совместимых комплектующих заданного типа
+        WriteLn('Доступные комплектующие:');
+        DisplayComponents(ComponentsList, ComponentTypesList);
+        
+        ComponentCode := SafeReadInteger('Введите код комплектующей: ', 1);
+        if ComponentCode < 1 then
+        begin
+          WriteLn('Поиск совместимых комплектующих отменен.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        if FindComponent(ComponentsList, ComponentCode) = nil then
+        begin
+          WriteLn('Ошибка: Комплектующая с кодом ', ComponentCode, ' не найдена.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        WriteLn('Доступные типы комплектующих:');
+        DisplayComponentTypes(ComponentTypesList);
+        
+        TypeCode := SafeReadInteger('Введите код типа комплектующих для поиска совместимых: ', 1);
+        if TypeCode < 1 then
+        begin
+          WriteLn('Поиск совместимых комплектующих отменен.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        if FindComponentType(ComponentTypesList, TypeCode) = nil then
+        begin
+          WriteLn('Ошибка: Тип комплектующих с кодом ', TypeCode, ' не найден.');
+          PressEnterToContinue;
+          Exit;
+        end;
+        
+        if FindCompatibleComponents(ComponentsList, CompatibilityList, ComponentTypesList,
+                                  ComponentCode, TypeCode, CompatibleComponentsList) then
+        begin
+          WriteLn('Найдено ', CompatibleComponentsList.Count, ' совместимых комплектующих:');
+          DisplayComponents(CompatibleComponentsList, ComponentTypesList);
+        end
+        else
+          WriteLn('Не найдено совместимых комплектующих заданного типа.');
+      end;
+  end;
+  
+  PressEnterToContinue;
+end;
+
+end. 
+======== SpecialFunctions.pas ========
+unit SpecialFunctions;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  SysUtils, DataTypes, DynamicLists, FileOperations, UI;
+
+{ Функция для подбора вариантов комплектации ПК в заданном ценовом диапазоне }
+function FindPCBuildOptions(const ComponentList: TComponentList;
+                           const CompatibilityList: TCompatibilityList;
+                           const TypesList: TComponentTypeList;
+                           MinPrice, MaxPrice: Real;
+                           var BuildOptionsList: TPCBuildOptionList): Boolean;
+
+{ Функция для оформления заказа }
+function CreateOrder(const BuildOption: TPCBuildOption;
+                    const ComponentList: TComponentList;
+                    var OrdersList: TOrderList): Boolean;
+
+{ Функция для поиска совместимых комплектующих заданного типа }
+function FindCompatibleComponents(const ComponentList: TComponentList;
+                                 const CompatibilityList: TCompatibilityList;
+                                 const TypesList: TComponentTypeList;
+                                 ComponentCode, TypeCode: Integer;
+                                 var CompatibleComponents: TComponentList): Boolean;
+
+implementation
+
+{ Вспомогательная функция для проверки совместимости двух комплектующих }
+function AreComponentsCompatible(ComponentCode1, ComponentCode2: Integer;
+                               const CompatibilityList: TCompatibilityList): Boolean;
+var
+  Current: PCompatibilityNode;
+begin
+  Result := False;
+  Current := CompatibilityList.Head;
+  
+  while Current <> nil do
+  begin
+    // Проверяем совместимость в обоих направлениях
+    if ((Current^.Data.ComponentCode1 = ComponentCode1) and (Current^.Data.ComponentCode2 = ComponentCode2)) or
+       ((Current^.Data.ComponentCode1 = ComponentCode2) and (Current^.Data.ComponentCode2 = ComponentCode1)) then
+    begin
+      Result := True;
+    end;
+    
+    Current := Current^.Next;
+  end;
+end;
+
+{ Вспомогательная функция для проверки совместимости комплектующей со всеми в наборе }
+function IsCompatibleWithAll(ComponentCode: Integer;
+                           const ComponentCodes: array of Integer;
+                           const CompatibilityList: TCompatibilityList): Boolean;
+var
+  i: Integer;
+begin
+  Result := True;
+  
+  for i := 0 to Length(ComponentCodes) - 1 do
+  begin
+    if not AreComponentsCompatible(ComponentCode, ComponentCodes[i], CompatibilityList) then
+    begin
+      Result := False;
+      Exit;
+    end;
+  end;
+end;
+
+{ Вспомогательная функция для получения списка комплектующих по типу }
+function GetComponentsByType(const ComponentList: TComponentList;
+                           TypeCode: Integer;
+                           var ResultList: TComponentList): Boolean;
+var
+  Current: PComponentNode;
+begin
+  Result := False;
+  InitComponentList(ResultList);
+  
+  Current := ComponentList.Head;
+  while Current <> nil do
+  begin
+    if Current^.Data.TypeCode = TypeCode then
+      AddComponent(ResultList, Current^.Data);
+    
+    Current := Current^.Next;
+  end;
+  
+  Result := ResultList.Count > 0;
+end;
+
+{ Вспомогательная функция для рекурсивного построения вариантов комплектации }
+procedure BuildConfigurationsRecursive(const ComponentList: TComponentList;
+                                     const CompatibilityList: TCompatibilityList;
+                                     const TypesList: TComponentTypeList;
+                                     var BuildOptionsList: TPCBuildOptionList;
+                                     CurrentComponents: array of Integer;
+                                     CurrentPrice: Real;
+                                     MinPrice, MaxPrice: Real;
+                                     CurrentTypeIndex: Integer;
+                                     var NextBuildID: Integer);
+var
+  TypeNode: PComponentTypeNode;
+  ComponentsOfType: TComponentList;
+  ComponentNode: PComponentNode;
+  NewComponents: array of Integer;
+  i, j: Integer;
+  BuildOption: TPCBuildOption;
+begin
+  // Получаем текущий тип комплектующих
+  TypeNode := TypesList.Head;
+  for i := 1 to CurrentTypeIndex - 1 do
+  begin
+    if TypeNode = nil then
+      Exit;
+    TypeNode := TypeNode^.Next;
+  end;
+  
+  // Если достигли конца списка типов, создаем вариант комплектации
+  if TypeNode = nil then
+  begin
+    // Проверяем, что цена в заданном диапазоне
+    if (CurrentPrice >= MinPrice) and (CurrentPrice <= MaxPrice) then
+    begin
+      // Создаем новый вариант комплектации
+      BuildOption.ID := NextBuildID;
+      Inc(NextBuildID);
+      
+      SetLength(BuildOption.ComponentCodes, Length(CurrentComponents));
+      for i := 0 to Length(CurrentComponents) - 1 do
+        BuildOption.ComponentCodes[i] := CurrentComponents[i];
+      
+      BuildOption.TotalPrice := CurrentPrice;
+      
+      // Добавляем в список вариантов
+      AddPCBuildOption(BuildOptionsList, BuildOption);
+    end;
+    Exit;
+  end;
+  
+  // Получаем все комплектующие текущего типа
+  if not GetComponentsByType(ComponentList, TypeNode^.Data.TypeCode, ComponentsOfType) then
+  begin
+    // Если нет комплектующих этого типа, переходим к следующему типу
+    BuildConfigurationsRecursive(ComponentList, CompatibilityList, TypesList,
+                               BuildOptionsList, CurrentComponents, CurrentPrice,
+                               MinPrice, MaxPrice, CurrentTypeIndex + 1, NextBuildID);
+    Exit;
+  end;
+  
+  // Для каждой комплектующей текущего типа
+  ComponentNode := ComponentsOfType.Head;
+  while ComponentNode <> nil do
+  begin
+    // Проверяем совместимость с уже выбранными комплектующими
+    if IsCompatibleWithAll(ComponentNode^.Data.Code, CurrentComponents, CompatibilityList) then
+    begin
+      // Добавляем комплектующую к текущему набору
+      SetLength(NewComponents, Length(CurrentComponents) + 1);
+      for i := 0 to Length(CurrentComponents) - 1 do
+        NewComponents[i] := CurrentComponents[i];
+      NewComponents[Length(NewComponents) - 1] := ComponentNode^.Data.Code;
+      
+      // Рекурсивно продолжаем построение для следующего типа
+      BuildConfigurationsRecursive(ComponentList, CompatibilityList, TypesList,
+                                 BuildOptionsList, NewComponents,
+                                 CurrentPrice + ComponentNode^.Data.Price,
+                                 MinPrice, MaxPrice, CurrentTypeIndex + 1, NextBuildID);
+    end;
+    
+    ComponentNode := ComponentNode^.Next;
+  end;
+  
+  // Освобождаем память
+  ClearComponentList(ComponentsOfType);
+end;
+
+{ Вспомогательная функция для сортировки вариантов комплектации по цене }
+procedure SortBuildOptionsByPrice(var List: TPCBuildOptionList);
+var
+  Sorted: Boolean;
+  Current, Next: PPCBuildOptionNode;
+  TempData: TPCBuildOption;
+begin
+  if (List.Head = nil) or (List.Head^.Next = nil) then
+    Exit; // Список пуст или содержит только один элемент
+  
+  repeat
+    Sorted := True;
+    Current := List.Head;
+    
+    while (Current <> nil) and (Current^.Next <> nil) do
+    begin
+      Next := Current^.Next;
+      
+      if Current^.Data.TotalPrice > Next^.Data.TotalPrice then
+      begin
+        // Меняем местами данные узлов
+        TempData := Current^.Data;
+        Current^.Data := Next^.Data;
+        Next^.Data := TempData;
+        
+        Sorted := False;
+      end;
+      
+      Current := Current^.Next;
+    end;
+  until Sorted;
+end;
+
+{ Реализация функции для подбора вариантов комплектации ПК в заданном ценовом диапазоне }
+function FindPCBuildOptions(const ComponentList: TComponentList;
+                           const CompatibilityList: TCompatibilityList;
+                           const TypesList: TComponentTypeList;
+                           MinPrice, MaxPrice: Real;
+                           var BuildOptionsList: TPCBuildOptionList): Boolean;
+var
+  EmptyArray: array of Integer;
+  NextBuildID: Integer;
+begin
+  Result := False;
+  
+  // Инициализируем список вариантов комплектации
+  InitPCBuildOptionList(BuildOptionsList);
+  
+  // Инициализируем пустой массив комплектующих
+  SetLength(EmptyArray, 0);
+  
+  // Получаем следующий доступный ID
+  NextBuildID := UI.GetNextID(BuildOptionsList);
+  
+  // Рекурсивно строим все возможные варианты комплектации
+  BuildConfigurationsRecursive(ComponentList, CompatibilityList, TypesList,
+                             BuildOptionsList, EmptyArray, 0,
+                             MinPrice, MaxPrice, 1, NextBuildID);
+  
+  // Сортируем варианты по цене
+  SortBuildOptionsByPrice(BuildOptionsList);
+  
+  Result := BuildOptionsList.Count > 0;
+end;
+
+{ Реализация функции для оформления заказа }
+function CreateOrder(const BuildOption: TPCBuildOption;
+                    const ComponentList: TComponentList;
+                    var OrdersList: TOrderList): Boolean;
+var
+  Order: TOrder;
+  i: Integer;
+  ComponentNode: PComponentNode;
+  TempName, TempPhone: string;
+begin
+  Result := False;
+  
+  // Запрашиваем данные заказчика
+  Write('Введите имя заказчика: ');
+  ReadLn(TempName);
+  Order.CustomerName := StringToFixed(TempName);
+  
+  Write('Введите телефон заказчика: ');
+  ReadLn(TempPhone);
+  Order.CustomerPhone := StringToFixed(TempPhone);
+  
+  // Генерируем ID заказа с использованием функции GetNextID
+  Order.ID := UI.GetNextID(OrdersList);
+  
+  // Устанавливаем ID варианта комплектации и дату заказа
+  Order.BuildOptionID := BuildOption.ID;
+  Order.OrderDate := Now;
+  
+  // Проверяем наличие комплектующих и уменьшаем их количество
+  for i := 0 to Length(BuildOption.ComponentCodes) - 1 do
+  begin
+    ComponentNode := FindComponent(ComponentList, BuildOption.ComponentCodes[i]);
+    
+    if ComponentNode = nil then
+    begin
+      WriteLn('Ошибка: Комплектующая с кодом ', BuildOption.ComponentCodes[i], ' не найдена.');
+      Exit;
+    end;
+    
+    if ComponentNode^.Data.InStock <= 0 then
+    begin
+      WriteLn('Ошибка: Комплектующая ', ComponentNode^.Data.Manufacturer, ' ', 
+              ComponentNode^.Data.Model, ' отсутствует на складе.');
+      Exit;
+    end;
+    
+    // Уменьшаем количество на складе
+    Dec(ComponentNode^.Data.InStock);
+  end;
+  
+  // Добавляем заказ в список
+  if not AddOrder(OrdersList, Order) then
+  begin
+    WriteLn('Ошибка при добавлении заказа в список.');
+    Exit;
+  end;
+  
+  // Сохраняем информацию о заказе в текстовый файл
+  if not SaveOrderToTextFile(Order, BuildOption, ComponentList, '') then
+  begin
+    WriteLn('Ошибка при сохранении информации о заказе в файл.');
+    Exit;
+  end;
+  
+  Result := True;
+end;
+
+{ Реализация функции для поиска совместимых комплектующих заданного типа }
+function FindCompatibleComponents(const ComponentList: TComponentList;
+                                 const CompatibilityList: TCompatibilityList;
+                                 const TypesList: TComponentTypeList;
+                                 ComponentCode, TypeCode: Integer;
+                                 var CompatibleComponents: TComponentList): Boolean;
+var
+  BaseComponent: PComponentNode;
+  Current: PComponentNode;
+begin
+  Result := False;
+  
+  // Инициализируем список совместимых комплектующих
+  InitComponentList(CompatibleComponents);
+  
+  // Находим базовую комплектующую
+  BaseComponent := FindComponent(ComponentList, ComponentCode);
+  if BaseComponent = nil then
+  begin
+    WriteLn('Ошибка: Комплектующая с кодом ', ComponentCode, ' не найдена.');
+    Exit;
+  end;
+  
+  // Проходим по всем комплектующим заданного типа
+  Current := ComponentList.Head;
+  while Current <> nil do
+  begin
+    // Проверяем, что комплектующая имеет заданный тип и совместима с базовой
+    if (Current^.Data.TypeCode = TypeCode) and 
+       AreComponentsCompatible(BaseComponent^.Data.Code, Current^.Data.Code, CompatibilityList) then
+    begin
+      // Добавляем в список совместимых
+      AddComponent(CompatibleComponents, Current^.Data);
+    end;
+    
+    Current := Current^.Next;
+  end;
+  
+  Result := CompatibleComponents.Count > 0;
+end;
+
+end.
+======== UI.pas ========
+unit UI;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  SysUtils, Crt, DataTypes, DynamicLists, InputUtils;
+
+{ Константы для пунктов меню }
+const
+  MENU_LOAD_DATA = 1;
+  MENU_VIEW_LIST = 2;
+  MENU_SORT_DATA = 3;
+  MENU_SEARCH_DATA = 4;
+  MENU_ADD_DATA = 5;
+  MENU_REMOVE_DATA = 6;
+  MENU_EDIT_DATA = 7;
+  MENU_SPECIAL_FUNCTIONS = 8;
+  MENU_EXIT_WITHOUT_SAVE = 9;
+  MENU_EXIT_WITH_SAVE = 10;
+
+{ Константы для подменю списков }
+const
+  SUBMENU_COMPONENT_TYPES = 1;
+  SUBMENU_COMPONENTS = 2;
+  SUBMENU_COMPATIBILITY = 3;
+  SUBMENU_ORDERS = 4;
+
+{ Константы для подменю специальных функций }
+const
+  SUBMENU_SF_BUILD_PC = 1;
+  SUBMENU_SF_CREATE_ORDER = 2;
+  SUBMENU_SF_COMPATIBLE_COMPONENTS = 3;
+
+{ Процедуры для отображения меню и подменю }
+procedure DisplayMainMenu;
+function GetMenuChoice: Integer;
+procedure DisplayListSubmenu;
+function GetListSubmenuChoice: Integer;
+procedure DisplayAddDataSubmenu;
+function GetAddDataSubmenuChoice: Integer;
+procedure DisplaySpecialFunctionsSubmenu;
+function GetSpecialFunctionsSubmenuChoice: Integer;
+
+{ Процедуры для отображения данных }
+procedure DisplayComponentTypes(const List: TComponentTypeList);
+procedure DisplayComponents(const List: TComponentList; const TypesList: TComponentTypeList);
+procedure DisplayCompatibility(const List: TCompatibilityList; const ComponentsList: TComponentList);
+procedure DisplayOrders(const List: TOrderList; const BuildOptionsList: TPCBuildOptionList);
+procedure DisplayOrdersDetailed(const List: TOrderList; const BuildOptionsList: TPCBuildOptionList; const ComponentsList: TComponentList);
+procedure DisplayPCBuildOptions(const List: TPCBuildOptionList; const ComponentsList: TComponentList);
+
+{ Процедуры для ввода данных }
+function InputComponentType(var ComponentType: TComponentType; const List: TComponentTypeList): Boolean;
+function InputComponent(var Component: TComponent; const TypesList: TComponentTypeList; const List: TComponentList): Boolean;
+function InputCompatibility(var Compatibility: TCompatibility; const ComponentsList: TComponentList): Boolean;
+function InputOrder(var Order: TOrder; const BuildOptionsList: TPCBuildOptionList; const List: TOrderList): Boolean;
+
+{ Вспомогательные процедуры }
+procedure ClearScreen;
+procedure PressEnterToContinue;
+function GetNextID(const List: TComponentTypeList): Integer; overload;
+function GetNextID(const List: TComponentList): Integer; overload;
+function GetNextID(const List: TPCBuildOptionList): Integer; overload;
+function GetNextID(const List: TOrderList): Integer; overload;
+function GetComponentTypeName(TypeCode: Integer; const TypesList: TComponentTypeList): string;
+
+{ Глобальные счетчики для уникальных ID }
+var
+  NextComponentTypeID: Integer = 1;
+  NextComponentID: Integer = 1;
+  NextPCBuildOptionID: Integer = 1;
+  NextOrderID: Integer = 1;
+
+implementation
+
+{ Реализация процедур для отображения меню и подменю }
+
+procedure DisplayMainMenu;
+begin
+  ClearScreen;
+  WriteLn('=== ГЛАВНОЕ МЕНЮ ===');
+  WriteLn('1. Чтение данных из файла');
+  WriteLn('2. Просмотр всего списка');
+  WriteLn('3. Сортировка данных');
+  WriteLn('4. Поиск данных с использованием фильтров');
+  WriteLn('5. Добавление данных в список');
+  WriteLn('6. Удаление данных из списка');
+  WriteLn('7. Редактирование данных');
+  WriteLn('8. Сборка ПК и Заказы');
+  WriteLn('9. Выход из программы без сохранения изменений');
+  WriteLn('10. Выход с сохранением изменений');
+  WriteLn('==================');
+  Write('Выберите пункт меню: ');
+end;
+
+function GetMenuChoice: Integer;
+begin
+  Result := SafeReadInteger('', MENU_LOAD_DATA, MENU_EXIT_WITH_SAVE,
+                          'Ошибка: Выберите пункт меню от 1 до 10.');
+end;
+
+procedure DisplayListSubmenu;
+begin
+  ClearScreen;
+  WriteLn('=== ВЫБЕРИТЕ СПИСОК ===');
+  WriteLn('1. Типы комплектующих');
+  WriteLn('2. Комплектующие');
+  WriteLn('3. Совместимость комплектующих');
+  WriteLn('4. Заказы');
+  WriteLn('==================');
+  Write('Выберите список: ');
+end;
+
+function GetListSubmenuChoice: Integer;
+begin
+  Result := SafeReadInteger('', SUBMENU_COMPONENT_TYPES, SUBMENU_ORDERS,
+                          'Ошибка: Выберите пункт подменю от 1 до 4.');
+end;
+
+procedure DisplayAddDataSubmenu;
+begin
+  ClearScreen;
+  WriteLn('=== ВЫБЕРИТЕ ТИП ДАННЫХ ДЛЯ ДОБАВЛЕНИЯ ===');
+  WriteLn('1. Типы комплектующих');
+  WriteLn('2. Комплектующие');
+  WriteLn('3. Совместимость комплектующих');
+  WriteLn('==================');
+  Write('Выберите тип данных: ');
+end;
+
+function GetAddDataSubmenuChoice: Integer;
+begin
+  Result := SafeReadInteger('', SUBMENU_COMPONENT_TYPES, SUBMENU_COMPATIBILITY,
+                          'Ошибка: Выберите пункт подменю от 1 до 3.');
+end;
+
+procedure DisplaySpecialFunctionsSubmenu;
+begin
+  ClearScreen;
+  WriteLn('=== СПЕЦИАЛЬНЫЕ ФУНКЦИИ ===');
+  WriteLn('1. Подбор вариантов комплектации ПК в заданном ценовом диапазоне');
+  WriteLn('2. Оформление заказа');
+  WriteLn('3. Поиск совместимых комплектующих заданного типа');
+  WriteLn('==================');
+  Write('Выберите функцию: ');
+end;
+
+function GetSpecialFunctionsSubmenuChoice: Integer;
+begin
+  Result := SafeReadInteger('', SUBMENU_SF_BUILD_PC, SUBMENU_SF_COMPATIBLE_COMPONENTS,
+                          'Ошибка: Выберите пункт подменю от 1 до 3.');
+end;
+
+{ Реализация процедур для отображения данных }
+
+procedure DisplayComponentTypes(const List: TComponentTypeList);
+var
+  Current: PComponentTypeNode;
+  Count: Integer;
+begin
+  ClearScreen;
+  WriteLn('=== СПИСОК ТИПОВ КОМПЛЕКТУЮЩИХ ===');
+  WriteLn('Код типа │ Название');
+  WriteLn('---------┼------------------------');
+  
+  Current := List.Head;
+  Count := 0;
+  
+  while Current <> nil do
+  begin
+    WriteLn(Current^.Data.TypeCode:8, ' │ ', Current^.Data.Name);
+    Current := Current^.Next;
+    Inc(Count);
+  end;
+  
+  WriteLn('---------┴------------------------');
+  WriteLn('Всего записей: ', Count);
+  WriteLn;
+  
+  PressEnterToContinue;
+end;
+
+procedure DisplayComponents(const List: TComponentList; const TypesList: TComponentTypeList);
+var
+  Current: PComponentNode;
+  Count: Integer;
+  TypeName: string;
+begin
+  ClearScreen;
+  WriteLn('=== СПИСОК КОМПЛЕКТУЮЩИХ ===');
+  WriteLn('Код │ Тип        │ Производитель │ Модель     │ Параметры       │ Цена     │ В наличии');
+  WriteLn('----┼------------┼---------------┼------------┼-----------------┼----------┼----------');
+  
+  Current := List.Head;
+  Count := 0;
+  
+  while Current <> nil do
+  begin
+    TypeName := GetComponentTypeName(Current^.Data.TypeCode, TypesList);
+    
+    WriteLn(Current^.Data.Code:3, ' │ ', 
+            TypeName:10, ' │ ', 
+            Current^.Data.Manufacturer:13, ' │ ', 
+            Current^.Data.Model:10, ' │ ', 
+            Current^.Data.Parameters:15, ' │ ', 
+            Current^.Data.Price:8:2, ' │ ', 
+            Current^.Data.InStock:9);
+    
+    Current := Current^.Next;
+    Inc(Count);
+  end;
+  
+  WriteLn('----┴------------┴---------------┴------------┴-----------------┴----------┴----------');
+  WriteLn('Всего записей: ', Count);
+  WriteLn;
+  
+  PressEnterToContinue;
+end;
+
+procedure DisplayCompatibility(const List: TCompatibilityList; const ComponentsList: TComponentList);
+var
+  Current: PCompatibilityNode;
+  Count: Integer;
+  Component1, Component2: PComponentNode;
+begin
+  ClearScreen;
+  WriteLn('=== СПИСОК СОВМЕСТИМОСТИ КОМПЛЕКТУЮЩИХ ===');
+  WriteLn('Код 1 │ Комплектующая 1      │ Код 2 │ Комплектующая 2');
+  WriteLn('------┼----------------------┼-------┼------------------------');
+  
+  Current := List.Head;
+  Count := 0;
+  
+  while Current <> nil do
+  begin
+    Component1 := FindComponent(ComponentsList, Current^.Data.ComponentCode1);
+    Component2 := FindComponent(ComponentsList, Current^.Data.ComponentCode2);
+    
+    Write(Current^.Data.ComponentCode1:5, ' │ ');
+    
+    if Component1 <> nil then
+      Write((Component1^.Data.Manufacturer + ' ' + Component1^.Data.Model):20)
+    else
+      Write('Неизвестно':20);
+    
+    Write(' │ ', Current^.Data.ComponentCode2:5, ' │ ');
+    
+    if Component2 <> nil then
+      WriteLn((Component2^.Data.Manufacturer + ' ' + Component2^.Data.Model):20)
+    else
+      WriteLn('Неизвестно':20);
+    
+    Current := Current^.Next;
+    Inc(Count);
+  end;
+  
+  WriteLn('------┴----------------------┴-------┴------------------------');
+  WriteLn('Всего записей: ', Count);
+  WriteLn;
+  
+  PressEnterToContinue;
+end;
+
+procedure DisplayOrders(const List: TOrderList; const BuildOptionsList: TPCBuildOptionList);
+var
+  Current: POrderNode;
+  Count: Integer;
+  BuildOption: PPCBuildOptionNode;
+begin
+  ClearScreen;
+  WriteLn('=== СПИСОК ЗАКАЗОВ ===');
+  WriteLn('ID │ Вариант │ Заказчик     │ Телефон  │ Дата заказа │ Стоимость │ Компонентов');
+  WriteLn('---┼---------┼--------------┼----------┼-------------┼-----------┼------------');
+  
+  Current := List.Head;
+  Count := 0;
+  
+  while Current <> nil do
+  begin
+    BuildOption := FindPCBuildOption(BuildOptionsList, Current^.Data.BuildOptionID);
+    
+    Write(Current^.Data.ID:2, ' │ ', 
+          Current^.Data.BuildOptionID:7, ' │ ', 
+          Current^.Data.CustomerName:12, ' │ ', 
+          Current^.Data.CustomerPhone:8, ' │ ', 
+          FormatDateTime('dd.mm.yyyy', Current^.Data.OrderDate):11, ' │ ');
+    
+    if BuildOption <> nil then
+    begin
+      Write(BuildOption^.Data.TotalPrice:9:2, ' │ ');
+      WriteLn(Length(BuildOption^.Data.ComponentCodes):11);
+    end
+    else
+      WriteLn(' Неизвестно │  Неизвестно');
+    
+    Current := Current^.Next;
+    Inc(Count);
+  end;
+  
+  WriteLn('---┴---------┴--------------┴----------┴-------------┴-----------┴------------');
+  WriteLn('Всего записей: ', Count);
+  WriteLn;
+  
+  PressEnterToContinue;
+end;
+
+procedure DisplayOrdersDetailed(const List: TOrderList; const BuildOptionsList: TPCBuildOptionList; const ComponentsList: TComponentList);
+var
+  Current: POrderNode;
+  Count, i: Integer;
+  BuildOption: PPCBuildOptionNode;
+  ComponentNode: PComponentNode;
+begin
+  ClearScreen;
+  WriteLn('=== ПОДРОБНЫЙ СПИСОК ЗАКАЗОВ ===');
+  
+  Current := List.Head;
+  Count := 0;
+  
+  while Current <> nil do
+  begin
+    Inc(Count);
+    WriteLn;
+    WriteLn('Заказ #', Current^.Data.ID);
+    WriteLn('══════════════════════════════════════════════════════════════');
+    WriteLn('Заказчик: ', Current^.Data.CustomerName);
+    WriteLn('Телефон: ', Current^.Data.CustomerPhone);
+    WriteLn('Дата заказа: ', FormatDateTime('dd.mm.yyyy hh:nn', Current^.Data.OrderDate));
+    WriteLn('Вариант сборки: #', Current^.Data.BuildOptionID);
+    
+    BuildOption := FindPCBuildOption(BuildOptionsList, Current^.Data.BuildOptionID);
+    if BuildOption <> nil then
+    begin
+      WriteLn('Общая стоимость: ', BuildOption^.Data.TotalPrice:0:2, ' руб.');
+      WriteLn('Количество компонентов: ', Length(BuildOption^.Data.ComponentCodes));
+      WriteLn('Состав комплектации:');
+      
+      for i := 0 to Length(BuildOption^.Data.ComponentCodes) - 1 do
+      begin
+        ComponentNode := FindComponent(ComponentsList, BuildOption^.Data.ComponentCodes[i]);
+        if ComponentNode <> nil then
+        begin
+          WriteLn('  • ', ComponentNode^.Data.Manufacturer, ' ', 
+                       ComponentNode^.Data.Model, ' — ', 
+                       ComponentNode^.Data.Price:0:2, ' руб.');
+        end
+        else
+          WriteLn('  • Неизвестный компонент (код: ', BuildOption^.Data.ComponentCodes[i], ')');
+      end;
+    end
+    else
+    begin
+      WriteLn('Общая стоимость: Неизвестно (вариант сборки не найден)');
+      WriteLn('Состав комплектации: Недоступен');
+    end;
+    
+    Current := Current^.Next;
+  end;
+  
+  WriteLn;
+  WriteLn('══════════════════════════════════════════════════════════════');
+  WriteLn('Всего заказов: ', Count);
+  WriteLn;
+  
+  PressEnterToContinue;
+end;
+
+procedure DisplayPCBuildOptions(const List: TPCBuildOptionList; const ComponentsList: TComponentList);
+var
+  Current: PPCBuildOptionNode;
+  Count, i: Integer;
+  ComponentNode: PComponentNode;
+begin
+  ClearScreen;
+  WriteLn('=== ВАРИАНТЫ КОМПЛЕКТАЦИИ ПК ===');
+  
+  Current := List.Head;
+  Count := 0;
+  
+  while Current <> nil do
+  begin
+    WriteLn('Вариант #', Current^.Data.ID);
+    WriteLn('Общая стоимость: ', Current^.Data.TotalPrice:0:2, ' руб.');
+    WriteLn('Комплектующие:');
+    
+    for i := 0 to Length(Current^.Data.ComponentCodes) - 1 do
+    begin
+      ComponentNode := FindComponent(ComponentsList, Current^.Data.ComponentCodes[i]);
+      
+      if ComponentNode <> nil then
+      begin
+        WriteLn('  • ', ComponentNode^.Data.Manufacturer, ' ', 
+                     ComponentNode^.Data.Model, ' (', 
+                     ComponentNode^.Data.Price:0:2, ' руб.)');
+      end;
+    end;
+    
+    WriteLn('------------------------');
+    
+    Current := Current^.Next;
+    Inc(Count);
+  end;
+  
+  WriteLn('Всего вариантов: ', Count);
+  WriteLn;
+  
+  PressEnterToContinue;
+end;
+
+{ Реализация процедур для ввода данных }
+
+function InputComponentType(var ComponentType: TComponentType; const List: TComponentTypeList): Boolean;
+var
+  TempName: string;
+begin
+  Result := False;
+  
+  // Автоматически генерируем код типа комплектующей
+  ComponentType.TypeCode := GetNextID(List);
+  WriteLn('Код типа комплектующей (генерируется автоматически): ', ComponentType.TypeCode);
+  
+  // Безопасный ввод названия типа комплектующей
+  TempName := SafeReadString('Введите название типа комплектующей: ', 1, MAX_STRING_LENGTH);
+  
+  // Проверка на команду возврата в меню
+  if IsReturnToMenuCommand(TempName) or IsCancelCommand(TempName) then
+    Exit;
+  
+  ComponentType.Name := StringToFixed(TempName);
+  Result := True;
+end;
+
+function InputComponent(var Component: TComponent; const TypesList: TComponentTypeList; const List: TComponentList): Boolean;
+var
+  TypeNode: PComponentTypeNode;
+  TempManufacturer, TempModel, TempParams: string;
+  TypeCode: Integer;
+begin
+  Result := False;
+  
+  // Автоматически генерируем код комплектующей
+  Component.Code := GetNextID(List);
+  WriteLn('Код комплектующей (генерируется автоматически): ', Component.Code);
+  
+  // Ввод и проверка кода типа
+  repeat
+    TypeCode := SafeReadInteger('Введите код типа комплектующей: ', 1);
+    
+    // Проверка на команду возврата в меню
+    if TypeCode < 1 then
+      Exit;
+    
+    Component.TypeCode := TypeCode;
+    TypeNode := FindComponentType(TypesList, Component.TypeCode);
+    
+    if TypeNode = nil then
+      WriteLn('Ошибка: Тип с кодом ', Component.TypeCode, ' не найден. Пожалуйста, введите существующий код типа.');
+  until TypeNode <> nil;
+  
+  // Безопасный ввод фирмы-изготовителя
+  TempManufacturer := SafeReadString('Введите фирму-изготовителя: ', 1, MAX_STRING_LENGTH);
+  if IsReturnToMenuCommand(TempManufacturer) or IsCancelCommand(TempManufacturer) then
+    Exit;
+  Component.Manufacturer := StringToFixed(TempManufacturer);
+  
+  // Безопасный ввод модели
+  TempModel := SafeReadString('Введите модель: ', 1, MAX_STRING_LENGTH);
+  if IsReturnToMenuCommand(TempModel) or IsCancelCommand(TempModel) then
+    Exit;
+  Component.Model := StringToFixed(TempModel);
+  
+  // Безопасный ввод параметров
+  TempParams := SafeReadString('Введите параметры: ', 0, MAX_STRING_LENGTH);
+  if IsReturnToMenuCommand(TempParams) or IsCancelCommand(TempParams) then
+    Exit;
+  Component.Parameters := StringToFixed(TempParams);
+  
+  // Безопасный ввод цены
+  Component.Price := SafeReadFloat('Введите цену: ', 0);
+  if Component.Price < 0 then
+    Exit;
+  
+  // Безопасный ввод количества в наличии
+  Component.InStock := SafeReadInteger('Введите количество в наличии: ', 0);
+  if Component.InStock < 0 then
+    Exit;
+  
+  Result := True;
+end;
+
+function InputCompatibility(var Compatibility: TCompatibility; const ComponentsList: TComponentList): Boolean;
+var
+  Component1, Component2: PComponentNode;
+  ComponentCode1, ComponentCode2: Integer;
+begin
+  Result := False;
+  
+  try
+    // Ввод и проверка кода первой комплектующей
+    repeat
+      ComponentCode1 := SafeReadInteger('Введите код первой комплектующей: ', 1);
+      
+      // Проверка на команду возврата в меню или отмены
+      if ComponentCode1 < 1 then
+        Exit;
+      
+      Compatibility.ComponentCode1 := ComponentCode1;
+      Component1 := FindComponent(ComponentsList, Compatibility.ComponentCode1);
+      if Component1 = nil then
+        WriteLn('Ошибка: Комплектующая с кодом ', Compatibility.ComponentCode1, ' не найдена. Пожалуйста, введите существующий код.');
+    until Component1 <> nil;
+    
+    // Ввод и проверка кода второй комплектующей
+    repeat
+      ComponentCode2 := SafeReadInteger('Введите код второй комплектующей (совместимой с первой): ', 1);
+      
+      // Проверка на команду возврата в меню или отмены
+      if ComponentCode2 < 1 then
+        Exit;
+      
+      Compatibility.ComponentCode2 := ComponentCode2;
+      Component2 := FindComponent(ComponentsList, Compatibility.ComponentCode2);
+      if Component2 = nil then
+        WriteLn('Ошибка: Комплектующая с кодом ', Compatibility.ComponentCode2, ' не найдена. Пожалуйста, введите существующий код.');
+    until Component2 <> nil;
+    
+    // Проверка, что коды различны
+    if Compatibility.ComponentCode1 = Compatibility.ComponentCode2 then
+    begin
+      WriteLn('Ошибка: Нельзя создать запись о совместимости комплектующей с самой собой.');
+      Exit;
+    end;
+    
+    Result := True;
+  except
+    WriteLn('Ошибка при вводе данных.');
+  end;
+end;
+
+function InputOrder(var Order: TOrder; const BuildOptionsList: TPCBuildOptionList; const List: TOrderList): Boolean;
+var
+  BuildOption: PPCBuildOptionNode;
+  TempName, TempPhone: string;
+  BuildOptionID: Integer;
+begin
+  Result := False;
+  
+  try
+    // Автоматически генерируем ID заказа
+    Order.ID := GetNextID(List);
+    WriteLn('ID заказа (генерируется автоматически): ', Order.ID);
+    
+    // Ввод и проверка ID варианта комплектации
+    repeat
+      BuildOptionID := SafeReadInteger('Введите ID варианта комплектации: ', 1);
+      
+      // Проверка на команду возврата в меню или отмены
+      if BuildOptionID < 1 then
+        Exit;
+      
+      Order.BuildOptionID := BuildOptionID;
+      BuildOption := FindPCBuildOption(BuildOptionsList, Order.BuildOptionID);
+      if BuildOption = nil then
+        WriteLn('Ошибка: Вариант комплектации с ID ', Order.BuildOptionID, ' не найден. Пожалуйста, введите существующий ID.');
+    until BuildOption <> nil;
+    
+    TempName := SafeReadString('Введите имя заказчика: ', 1, MAX_STRING_LENGTH);
+    if IsReturnToMenuCommand(TempName) or IsCancelCommand(TempName) then
+      Exit;
+    Order.CustomerName := StringToFixed(TempName);
+    
+    TempPhone := SafeReadString('Введите телефон заказчика: ', 1, MAX_STRING_LENGTH);
+    if IsReturnToMenuCommand(TempPhone) or IsCancelCommand(TempPhone) then
+      Exit;
+    Order.CustomerPhone := StringToFixed(TempPhone);
+    
+    // Устанавливаем текущую дату и время
+    Order.OrderDate := Now;
+    
+    Result := True;
+  except
+    WriteLn('Ошибка при вводе данных.');
+  end;
+end;
+
+{ Реализация вспомогательных процедур }
+
+procedure ClearScreen;
+begin
+  ClrScr;
+end;
+
+procedure PressEnterToContinue;
+begin
+  Write('Нажмите Enter для продолжения...');
+  ReadLn;
+end;
+
+function GetNextID(const List: TComponentTypeList): Integer;
+var
+  Current: PComponentTypeNode;
+  MaxID: Integer;
+begin
+  // Инициализируем глобальный счетчик на основе существующих данных (только при первом вызове)
+  if NextComponentTypeID = 1 then
+  begin
+    MaxID := 0;
+    Current := List.Head;
+    
+    while Current <> nil do
+    begin
+      if Current^.Data.TypeCode > MaxID then
+        MaxID := Current^.Data.TypeCode;
+      Current := Current^.Next;
+    end;
+    
+    NextComponentTypeID := MaxID + 1;
+  end;
+  
+  Result := NextComponentTypeID;
+  Inc(NextComponentTypeID);
+end;
+
+function GetNextID(const List: TComponentList): Integer;
+var
+  Current: PComponentNode;
+  MaxID: Integer;
+begin
+  // Инициализируем глобальный счетчик на основе существующих данных (только при первом вызове)
+  if NextComponentID = 1 then
+  begin
+    MaxID := 0;
+    Current := List.Head;
+    
+    while Current <> nil do
+    begin
+      if Current^.Data.Code > MaxID then
+        MaxID := Current^.Data.Code;
+      Current := Current^.Next;
+    end;
+    
+    NextComponentID := MaxID + 1;
+  end;
+  
+  Result := NextComponentID;
+  Inc(NextComponentID);
+end;
+
+function GetNextID(const List: TPCBuildOptionList): Integer;
+var
+  Current: PPCBuildOptionNode;
+  MaxID: Integer;
+begin
+  // Инициализируем глобальный счетчик на основе существующих данных (только при первом вызове)
+  if NextPCBuildOptionID = 1 then
+  begin
+    MaxID := 0;
+    Current := List.Head;
+    
+    while Current <> nil do
+    begin
+      if Current^.Data.ID > MaxID then
+        MaxID := Current^.Data.ID;
+      Current := Current^.Next;
+    end;
+    
+    NextPCBuildOptionID := MaxID + 1;
+  end;
+  
+  Result := NextPCBuildOptionID;
+  Inc(NextPCBuildOptionID);
+end;
+
+function GetNextID(const List: TOrderList): Integer;
+var
+  Current: POrderNode;
+  MaxID: Integer;
+begin
+  // Инициализируем глобальный счетчик на основе существующих данных (только при первом вызове)
+  if NextOrderID = 1 then
+  begin
+    MaxID := 0;
+    Current := List.Head;
+    
+    while Current <> nil do
+    begin
+      if Current^.Data.ID > MaxID then
+        MaxID := Current^.Data.ID;
+      Current := Current^.Next;
+    end;
+    
+    NextOrderID := MaxID + 1;
+  end;
+  
+  Result := NextOrderID;
+  Inc(NextOrderID);
+end;
+
+function GetComponentTypeName(TypeCode: Integer; const TypesList: TComponentTypeList): string;
+var
+  TypeNode: PComponentTypeNode;
+begin
+  TypeNode := FindComponentType(TypesList, TypeCode);
+  
+  if TypeNode <> nil then
+    Result := TypeNode^.Data.Name
+  else
+    Result := 'Неизвестно';
+end;
+
+end.
+======== solve.dpr ========
+program solve;
+
+{$mode objfpc}{$H+}
+
+uses
+  SysUtils,
+  DataTypes,
+  DynamicLists,
+  FileOperations,
+  UI,
+  SpecialFunctions,
+  MenuHandlers,
+  MainProgram;
+
+var
+  // Списки данных
+  ComponentTypesList: TComponentTypeList;
+  ComponentsList: TComponentList;
+  CompatibilityList: TCompatibilityList;
+  PCBuildOptionsList: TPCBuildOptionList;
+  OrdersList: TOrderList;
+  
+  // Переменные для работы с меню
+  MenuChoice: Integer;
+  ExitProgram: Boolean;
+
+begin
+  // Инициализация
+  InitAllLists(ComponentTypesList, ComponentsList, CompatibilityList, 
+               PCBuildOptionsList, OrdersList);
+  ExitProgram := False;
+  
+  // Главный цикл программы
+  repeat
+    DisplayMainMenu;
+    MenuChoice := GetMenuChoice;
+    
+    case MenuChoice of
+      MENU_LOAD_DATA:
+        LoadAllData(ComponentTypesList, ComponentsList, CompatibilityList, OrdersList);
+      
+      MENU_VIEW_LIST:
+        ViewList(ComponentTypesList, ComponentsList, CompatibilityList, 
+                 OrdersList, PCBuildOptionsList);
+      
+      MENU_SORT_DATA:
+        HandleSortData(ComponentTypesList, ComponentsList, OrdersList);
+      
+      MENU_SEARCH_DATA:
+        HandleSearchData(ComponentsList, ComponentTypesList);
+      
+      MENU_ADD_DATA:
+        AddData(ComponentTypesList, ComponentsList, CompatibilityList);
+      
+      MENU_REMOVE_DATA:
+        RemoveData(ComponentTypesList, ComponentsList, CompatibilityList);
+      
+      MENU_EDIT_DATA:
+        EditData(ComponentTypesList, ComponentsList, CompatibilityList);
+      
+      MENU_SPECIAL_FUNCTIONS:
+        HandleSpecialFunctions(ComponentTypesList, ComponentsList, CompatibilityList,
+                               PCBuildOptionsList, OrdersList);
+      
+      MENU_EXIT_WITHOUT_SAVE:
+        begin
+          WriteLn('Выход без сохранения изменений.');
+          ExitProgram := True;
+        end;
+      
+      MENU_EXIT_WITH_SAVE:
+        begin
+          SaveAllData(ComponentTypesList, ComponentsList, CompatibilityList, OrdersList);
+          WriteLn('Выход с сохранением изменений.');
+          ExitProgram := True;
+        end;
+    end;
+  until ExitProgram;
+  
+  // Освобождение памяти
+  ClearComponentTypeList(ComponentTypesList);
+  ClearComponentList(ComponentsList);
+  ClearCompatibilityList(CompatibilityList);
+  ClearPCBuildOptionList(PCBuildOptionsList);
+  ClearOrderList(OrdersList);
+end.

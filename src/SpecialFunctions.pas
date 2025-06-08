@@ -44,7 +44,6 @@ begin
        ((Current^.Data.ComponentCode1 = ComponentCode2) and (Current^.Data.ComponentCode2 = ComponentCode1)) then
     begin
       Result := True;
-      Exit;
     end;
     
     Current := Current^.Next;
